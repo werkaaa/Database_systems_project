@@ -38,13 +38,16 @@ create view dbo.upcoming_workshops as
 
 create view dbo.upcoming_conferences as
     select c.conference_id, name, description, a.country, a.city,
-           a.postal_code, a.street, a.building_number, count(cd.conference_id) as days
+           a.postal_code, a.street, a.building_number, count(cd.conference_id) as days,
+           base_price*(1-dbo.get_discount(GETDATE(), c.conference_id)) as current_price
     from conferences c
     inner join conference_days cd on c.conference_id = cd.conference_id
     inner join addresses a on c.address_id = a.address_id
     inner join price_levels pl on pl.conference_id = c.conference_id
     group by c.conference_id, name, description, a.country, a.city,
-             a.postal_code, a.street, a.building_number;
+             a.postal_code, a.street, a.building_number,
+             base_price*(1-dbo.get_discount(GETDATE(), c.conference_id));
+
 
 create view dbo.payment_info as
     select p.payment_id, p.payment_date, r.reservation_id, r.reservation_date,
@@ -67,5 +70,8 @@ create view dbo.regular_customers as
     from companies co
     inner join customers cu on co.customer_id = cu.customer_id
     inner join registered r on cu.customer_id = r.customer_id
-    group by co.company_name, cu.phone_number, cu.email_address;
+    group by co.company_name, cu.phone_number, cu.email_address
+    having count(r.registered_id) > dbo.get_average_registered_number();
+
+
 

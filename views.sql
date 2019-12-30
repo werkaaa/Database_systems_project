@@ -1,4 +1,21 @@
-use dbo;
+
+if (object_id('dbo.company_customers_all') is not null)
+    drop view dbo.company_customers_all;
+
+if (object_id('dbo.individual_customers_all') is not null)
+    drop view dbo.individual_customers_all;
+
+if (object_id('dbo.upcoming_workshops') is not null)
+    drop view dbo.upcoming_workshops;
+
+if (object_id('dbo.upcoming_conferences') is not null)
+    drop view dbo.upcoming_conferences;
+
+if (object_id('dbo.payment_info') is not null)
+    drop view dbo.payment_info;
+
+if (object_id('dbo.regular_customers') is not null)
+    drop view dbo.regular_customers;
 
 create view dbo.company_customers_all as
     select cu.customer_id, co.company_name,
@@ -17,7 +34,7 @@ create view dbo.upcoming_workshops as
            start_time, end_time, cd.date
     from workshops w
     inner join conference_days cd on w.conference_day_id = cd.conference_day_id
-    where current_date() < cd.date;
+    where getdate() < cd.date;
 
 create view dbo.upcoming_conferences as
     select c.conference_id, name, description, a.country, a.city,
@@ -25,7 +42,8 @@ create view dbo.upcoming_conferences as
     from conferences c
     inner join conference_days cd on c.conference_id = cd.conference_id
     inner join addresses a on c.address_id = a.address_id
-    group by conference_id, name, description, a.country, a.city,
+    inner join price_levels pl on pl.conference_id = c.conference_id
+    group by c.conference_id, name, description, a.country, a.city,
              a.postal_code, a.street, a.building_number;
 
 create view dbo.payment_info as
@@ -49,6 +67,5 @@ create view dbo.regular_customers as
     from companies co
     inner join customers cu on co.customer_id = cu.customer_id
     inner join registered r on cu.customer_id = r.customer_id
-group by co.company_name, cu.phone_number, cu.email_address
-order by count(r.registered_id);
+    group by co.company_name, cu.phone_number, cu.email_address;
 

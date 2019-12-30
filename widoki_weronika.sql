@@ -1,4 +1,4 @@
-giocreate view dbo.workshops_data as
+create view dbo.workshops_data as
     select w.workshop_id, w.workshop_title, c.name as conference_name, w.workshop_description, w.price, w.start_time, w.end_time
     from workshops as w
     inner join conference_days as cd on w.conference_day_id = cd.conference_day_id

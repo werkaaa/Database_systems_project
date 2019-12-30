@@ -1,4 +1,4 @@
-create view dbo.workshops_data as
+giocreate view dbo.workshops_data as
     select w.workshop_id, w.workshop_title, c.name as conference_name, w.workshop_description, w.price, w.start_time, w.end_time
     from workshops as w
     inner join conference_days as cd on w.conference_day_id = cd.conference_day_id
@@ -18,8 +18,8 @@ create view dbo.customers_with_incomplete_data as
     inner join reservations as r on cu.customer_id = r.customer_id
     inner join conference_day_reservations as cdr on r.reservation_id = cdr.reservation_id
     inner join conference_days cd on cdr.conference_day_id = cd.conference_day_id
+    where dbo.company_client_data_is_complete(r.reservation_id)=0
     group by r.reservation_id, cu.customer_id, co.company_name, cu.email_address, cu.phone_number
-    having dbo.company_client_data_is_complete(r.reservation_id)=0
 
 create view dbo.customers_with_incomplete_data_to_contact_today as
     select *

@@ -1,4 +1,3 @@
-use u_wtarsa_1
 
 if (object_id('dbo.company_customers_all') is not null)
     drop view dbo.company_customers_all;

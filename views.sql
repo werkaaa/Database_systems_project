@@ -64,12 +64,17 @@ create view dbo.payment_info as
     inner join customers c on r.customer_id = c.customer_id
     inner join individual_customers ic on ic.customer_id = c.customer_id;
 
+drop view regular_customers
+
 create view dbo.regular_customers as
     select co.company_name, cu.phone_number, cu.email_address,
            count(r.registered_id) as registered_employees_all_time
     from companies co
     inner join customers cu on co.customer_id = cu.customer_id
-    inner join registered r on cu.customer_id = r.customer_id
+    inner join reservations r2 on cu.customer_id = r2.customer_id
+    inner join conference_day_reservations cdr on r2.reservation_id = cdr.reservation_id
+    inner join conference_day_attendees cda on cdr.reservation_day_id = cda.reservation_day_id
+    inner join registered r on cda.registered_id = r.registered_id
     group by co.company_name, cu.phone_number, cu.email_address
     having count(r.registered_id) > dbo.get_average_registered_number();
 

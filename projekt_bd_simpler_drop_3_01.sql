@@ -1,5 +1,5 @@
 -- Created by Vertabelo (http://vertabelo.com)
--- Last modification date: 2019-12-28 21:09:55.934
+-- Last modification date: 2020-01-03 21:13:23.803
 
 -- foreign keys
 ALTER TABLE conference_day_attendees DROP CONSTRAINT conference_day_attendees_attendees;
@@ -19,10 +19,6 @@ ALTER TABLE individual_customers DROP CONSTRAINT individual_customers_customers;
 ALTER TABLE payments DROP CONSTRAINT payments_reservations;
 
 ALTER TABLE price_levels DROP CONSTRAINT price_levels_conferences;
-
-ALTER TABLE registered DROP CONSTRAINT registered_customers;
-
-ALTER TABLE student_cards DROP CONSTRAINT registered_students;
 
 ALTER TABLE conference_day_reservations DROP CONSTRAINT reservation_conference_day_conference_days;
 
@@ -45,6 +41,8 @@ DROP TABLE companies;
 
 DROP TABLE conference_day_attendees;
 
+DROP TABLE conference_day_reservations;
+
 DROP TABLE conference_days;
 
 DROP TABLE conferences;
@@ -59,15 +57,11 @@ DROP TABLE price_levels;
 
 DROP TABLE registered;
 
-DROP TABLE conference_day_reservations;
-
-DROP TABLE workshop_reservations;
-
 DROP TABLE reservations;
 
-DROP TABLE student_cards;
-
 DROP TABLE workshop_attendees;
+
+DROP TABLE workshop_reservations;
 
 DROP TABLE workshops;
 

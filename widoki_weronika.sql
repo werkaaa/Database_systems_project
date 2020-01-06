@@ -46,7 +46,22 @@ create view dbo.unpaid_reservations_to_delete_today as
     from dbo.unpaid_reservations
     where due_date <=getdate()
 
+create view dbo.registered_with_their_customers as
+    select distinct r.first_name, r.last_name, cda.is_student, r2.customer_id, r2.reservation_id
+    from registered as r
+    inner join conference_day_attendees as cda on r.registered_id = cda.registered_id
+    inner join conference_day_reservations as cdr on cda.reservation_day_id = cdr.reservation_day_id
+    inner join reservations r2 on cdr.reservation_id = r2.reservation_id
 
+-- create view dbo.reservations_with_their_price_time_frames as
+--     select r.reservation_id, c.conference_id, min(pl.date_from) as date_from
+--     from reservations r
+--     inner join conference_day_reservations cdr on r.reservation_id = cdr.reservation_id
+--     inner join conference_days cd on cdr.conference_day_id = cd.conference_day_id
+--     inner join conferences c on cd.conference_id = c.conference_id
+--     inner join price_levels pl on c.conference_id = pl.conference_id
+--     where pl.date_from < r.reservation_date
+--     group by  r.reservation_id, c.conference_id,  c.base_price, c.student_discount
 
 
 

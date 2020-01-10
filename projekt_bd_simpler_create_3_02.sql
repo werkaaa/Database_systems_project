@@ -108,8 +108,6 @@ CREATE TABLE reservations (
     reservation_id int  NOT NULL,
     customer_id int  NOT NULL,
     reservation_date date  NOT NULL,
-    student_attendees int  NOT NULL,
-    full_price_attendees int  NOT NULL,
     CONSTRAINT reservations_pk PRIMARY KEY  (reservation_id)
 );
 

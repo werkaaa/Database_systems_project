@@ -1,5 +1,4 @@
 create procedure dbo.add_conference
-    @conference_id int,
     @name varchar(64),
     @description varchar(256),
     @address_id int,
@@ -13,15 +12,13 @@ as
         begin throw 52000, 'Incorrect address_id: address with given id does not exist.', 1
         end
         insert into conferences
-            (conference_id,
-            name,
+            (name,
             description,
             address_id,
             base_price,
             student_discount)
         values
-            (@conference_id,
-             @name,
+            (@name,
              @description,
              @address_id,
              @base_price,
@@ -34,7 +31,6 @@ as
     end catch
 
 create procedure dbo.add_conference_day
-    @conference_day_id int,
     @conference_id int,
     @date date,
     @attendees_day_max int
@@ -51,13 +47,11 @@ as
          begin throw 52000, 'Conference day with given date and conference_id has already been created.', 1
          end
          insert into conference_days
-             (conference_day_id,
-              conference_id,
+             (conference_id,
               date,
               attendees_day_max)
          values
-             (@conference_day_id,
-              @conference_id,
+             (conference_id,
               @date,
               @attendees_day_max)
     end try
@@ -68,7 +62,6 @@ as
     end catch
 
 create procedure dbo.add_workshop
-    @workshop_id int,
     @conference_day_id int,
     @workshop_title varchar(64),
     @workshop_description varchar(256),
@@ -84,8 +77,7 @@ as
         begin throw 52000, 'Incorrect conference_day_id: conference day with given id does not exist.', 1
         end
         insert into workshops
-            (workshop_id,
-             conference_day_id,
+            (conference_day_id,
              workshop_title,
              workshop_description,
              attendees_workshop_max,
@@ -93,8 +85,7 @@ as
              start_time,
              end_time)
         values
-            (@workshop_id,
-             @conference_day_id,
+            (@conference_day_id,
              @workshop_title,
              @workshop_description,
              @attendees_workshop_max,
@@ -109,7 +100,6 @@ as
     end catch
 
 create procedure dbo.add_conference_discount
-    @price_level_id int,
     @conference_id int,
     @discount decimal(3,2),
     @date_from date
@@ -121,13 +111,11 @@ as
         begin throw 52000, 'Incorrect conference_id: conference with given id does not exist.', 1
         end
         insert into price_levels
-            (price_level_id,
-             conference_id,
+            (conference_id,
              discount,
              date_from)
         values
-            (@price_level_id,
-             @conference_id,
+            (@conference_id,
              @discount,
              @date_from)
     end try
@@ -138,7 +126,6 @@ as
     end catch
 
 create procedure dbo.add_conference_reservation
-    @reservation_id int,
     @customer_id int,
     @reservation_date date
 as
@@ -149,12 +136,10 @@ as
         begin throw 52000, 'Incorrect customer_id: customer with given id does not exist.', 1
         end
         insert into reservations
-            (reservation_id,
-             customer_id,
+            (customer_id,
              reservation_date)
         values
-            (@reservation_id,
-             @customer_id,
+            (@customer_id,
              @reservation_date)
     end try
     begin catch
@@ -164,7 +149,6 @@ as
     end catch
 
 create procedure dbo.add_conference_day_reservation
-    @reservation_day_id int,
     @conference_day_id int,
     @reservation_id int,
     @student_attendees int,
@@ -182,14 +166,12 @@ as
         begin throw 52000, 'Incorrect conference_day_id: conference day with given id does not exist.', 1
         end
         insert into conference_day_reservations
-            (reservation_day_id,
-             conference_day_id,
+            (conference_day_id,
              reservation_id,
              student_attendees,
              full_price_attendees)
         values
-            (@reservation_day_id,
-             @conference_day_id,
+            (@conference_day_id,
              @reservation_id,
              @student_attendees,
              @full_price_attendees)
@@ -199,3 +181,127 @@ as
                 = 'Cannot add conference day reservation. Message: ' + ERROR_MESSAGE();
         throw 52000, @error_message, 1
     end catch
+
+create procedure dbo.add_customer
+    @phone_number varchar(16),
+    @email_address varchar(64)
+as
+    begin try
+        insert into customers
+            (phone_number,
+             email_address)
+        values
+            (@phone_number,
+             @email_address)
+    end try
+    begin catch
+        declare @error_message varchar(2048)
+                = 'Cannot add customer. Message: ' + ERROR_MESSAGE();
+        throw 52000, @error_message, 1
+    end catch
+
+create procedure dbo.add_company_customer
+    @company_name varchar(64),
+    @customer_id int
+as
+    begin try
+        if not exists
+            (select * from customers
+            where customer_id = @customer_id)
+        begin throw 52000, 'Incorrect customer_id: customer with given id does not exist.', 1
+        end
+        insert into companies
+            (company_name,
+             customer_id)
+        values
+            (@company_name,
+             @customer_id)
+    end try
+    begin catch
+        declare @error_message varchar(2048)
+                = 'Cannot add company customer. Message: ' + ERROR_MESSAGE();
+        throw 52000, @error_message, 1
+    end catch
+
+create procedure dbo.add_individual_customer
+    @first_name varchar(64),
+    @last_name varchar(64),
+    @customer_id int
+as
+    begin try
+        if not exists
+            (select * from customers
+            where customer_id = @customer_id)
+        begin throw 52000, 'Incorrect customer_id: customer with given id does not exist.', 1
+        end
+        insert into individual_customers
+            (first_name,
+             last_name,
+             customer_id)
+        values
+            (@first_name,
+             @last_name,
+             @customer_id)
+    end try
+    begin catch
+        declare @error_message varchar(2048)
+                = 'Cannot add company customer. Message: ' + ERROR_MESSAGE();
+        throw 52000, @error_message, 1
+    end catch
+
+create procedure dbo.add_payment
+    @payment_date date,
+    @reservation_id int,
+    @amount money
+as
+    begin try
+        if not exists
+            (select * from reservations
+            where reservation_id = @reservation_id)
+        begin throw 52000, 'Incorrect reservation_id: reservation with given id does not exist.', 1
+        end
+        insert into payments
+            (payment_date,
+             reservation_id,
+             amount)
+        values
+            (@payment_date,
+             @reservation_id,
+             @amount)
+    end try
+    begin catch
+        declare @error_message varchar(2048)
+                = 'Cannot add payment. Message: ' + ERROR_MESSAGE();
+        throw 52000, @error_message, 1
+    end catch
+
+create procedure dbo.add_registered
+    @first_name varchar(64),
+    @last_name varchar(64)
+as
+    begin try
+        insert into registered
+            (first_name,
+             last_name)
+        values
+            (@first_name,
+             @last_name)
+    end try
+    begin catch
+        declare @error_message varchar(2048)
+                = 'Cannot add registered. Message: ' + ERROR_MESSAGE();
+        throw 52000, @error_message, 1
+    end catch
+
+create procedure dbo.get_all_attendees_from_reservation
+    @reservation_id int
+as
+    begin
+        select reg.first_name, reg.last_name, cd.date, cda.is_student
+        from reservations r
+        inner join conference_day_reservations cdr on r.reservation_id = cdr.reservation_id
+        inner join conference_day_attendees cda on cdr.reservation_day_id = cda.reservation_day_id
+        inner join conference_days cd on cdr.conference_day_id = cd.conference_day_id
+        inner join registered reg on cda.registered_id = reg.registered_id
+        where r.reservation_id = @reservation_id
+    end

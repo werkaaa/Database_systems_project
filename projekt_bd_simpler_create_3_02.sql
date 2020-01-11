@@ -4,7 +4,7 @@
 -- tables
 -- Table: addresses
 CREATE TABLE addresses (
-    address_id int  NOT NULL,
+    address_id int  NOT NULL identity,
     country varchar(64)  NOT NULL,
     city varchar(64)  NOT NULL,
     postal_code varchar(8)  NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE addresses (
 
 -- Table: companies
 CREATE TABLE companies (
-    company_id int  NOT NULL,
+    company_id int  NOT NULL identity,
     company_name varchar(64)  NOT NULL,
     customer_id int  NOT NULL,
     CONSTRAINT companies_pk PRIMARY KEY  (company_id)
@@ -23,7 +23,7 @@ CREATE TABLE companies (
 
 -- Table: conference_day_attendees
 CREATE TABLE conference_day_attendees (
-    attendee_id int  NOT NULL,
+    attendee_id int  NOT NULL identity,
     registered_id int  NOT NULL,
     reservation_day_id int  NOT NULL,
     is_student bit  NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE conference_day_attendees (
 
 -- Table: conference_day_reservations
 CREATE TABLE conference_day_reservations (
-    reservation_day_id int  NOT NULL,
+    reservation_day_id int  NOT NULL identity,
     conference_day_id int  NOT NULL,
     reservation_id int  NOT NULL,
     student_attendees int  NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE conference_day_reservations (
 
 -- Table: conference_days
 CREATE TABLE conference_days (
-    conference_day_id int  NOT NULL,
+    conference_day_id int  NOT NULL identity,
     conference_id int  NOT NULL,
     date date  NOT NULL,
     attendees_day_max int  NOT NULL,
@@ -51,7 +51,7 @@ CREATE TABLE conference_days (
 
 -- Table: conferences
 CREATE TABLE conferences (
-    conference_id int  NOT NULL,
+    conference_id int  NOT NULL identity,
     name varchar(64)  NOT NULL,
     description varchar(256)  NOT NULL,
     address_id int  NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE conferences (
 
 -- Table: customers
 CREATE TABLE customers (
-    customer_id int  NOT NULL,
+    customer_id int  NOT NULL identity,
     phone_number varchar(16)  NOT NULL,
     email_address varchar(64)  NOT NULL,
     CONSTRAINT customers_pk PRIMARY KEY  (customer_id)
@@ -70,7 +70,7 @@ CREATE TABLE customers (
 
 -- Table: individual_customers
 CREATE TABLE individual_customers (
-    individual_customer_id int  NOT NULL,
+    individual_customer_id int  NOT NULL identity,
     first_name varchar(64)  NOT NULL,
     last_name varchar(64)  NOT NULL,
     customer_id int  NOT NULL,
@@ -79,7 +79,7 @@ CREATE TABLE individual_customers (
 
 -- Table: payments
 CREATE TABLE payments (
-    payment_id int  NOT NULL,
+    payment_id int  NOT NULL identity,
     payment_date date  NOT NULL,
     reservation_id int  NOT NULL,
     amount money  NOT NULL,
@@ -88,7 +88,7 @@ CREATE TABLE payments (
 
 -- Table: price_levels
 CREATE TABLE price_levels (
-    price_level_id int  NOT NULL,
+    price_level_id int  NOT NULL identity,
     conference_id  int  NOT NULL,
     discount decimal(3,2)  NOT NULL,
     date_from date  NOT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE price_levels (
 
 -- Table: registered
 CREATE TABLE registered (
-    registered_id int  NOT NULL,
+    registered_id int  NOT NULL identity,
     first_name varchar(64)  NOT NULL,
     last_name varchar(64)  NOT NULL,
     CONSTRAINT registered_pk PRIMARY KEY  (registered_id)
@@ -105,7 +105,7 @@ CREATE TABLE registered (
 
 -- Table: reservations
 CREATE TABLE reservations (
-    reservation_id int  NOT NULL,
+    reservation_id int  NOT NULL identity,
     customer_id int  NOT NULL,
     reservation_date date  NOT NULL,
     CONSTRAINT reservations_pk PRIMARY KEY  (reservation_id)
@@ -120,7 +120,7 @@ CREATE TABLE workshop_attendees (
 
 -- Table: workshop_reservations
 CREATE TABLE workshop_reservations (
-    reservation_workshop_id int  NOT NULL,
+    reservation_workshop_id int  NOT NULL identity,
     reservation_day_id int  NOT NULL,
     workshop_id int  NOT NULL,
     attendees_number int  NOT NULL,
@@ -129,7 +129,7 @@ CREATE TABLE workshop_reservations (
 
 -- Table: workshops
 CREATE TABLE workshops (
-    workshop_id int  NOT NULL,
+    workshop_id int  NOT NULL identity,
     conference_day_id int  NOT NULL,
     workshop_title varchar(64)  NOT NULL,
     workshop_description varchar(256)  NOT NULL,

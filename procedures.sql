@@ -1,3 +1,39 @@
+if (object_id('dbo.add_conference') is not null)
+    drop procedure dbo.add_conference;
+
+if (object_id('dbo.add_conference_day') is not null)
+    drop procedure dbo.add_conference_day;
+
+if (object_id('dbo.add_workshop') is not null)
+    drop procedure dbo.add_workshop;
+
+if (object_id('dbo.add_conference_discount') is not null)
+    drop procedure dbo.add_conference_discount;
+
+if (object_id('dbo.add_company_customer') is not null)
+    drop procedure dbo.add_company_customer;
+
+if (object_id('dbo.add_conference_day_reservation') is not null)
+    drop procedure dbo.add_conference_day_reservation;
+
+if (object_id('dbo.add_conference_reservation') is not null)
+    drop procedure dbo.add_conference_reservation;
+
+if (object_id('dbo.add_customer') is not null)
+    drop procedure dbo.add_customer;
+
+if (object_id('dbo.add_individual_customer') is not null)
+    drop procedure dbo.add_individual_customer;
+
+if (object_id('dbo.add_payment') is not null)
+    drop procedure dbo.add_payment;
+
+if (object_id('dbo.add_registered') is not null)
+    drop procedure dbo.add_registered;
+
+if (object_id('dbo.get_all_attendees_from_reservation') is not null)
+    drop procedure dbo.get_all_attendees_from_reservation;
+
 create procedure dbo.add_conference
     @name varchar(64),
     @description varchar(256),
@@ -29,6 +65,7 @@ as
                 = 'Cannot add conference. Message: ' + ERROR_MESSAGE();
         throw 52000, @error_message, 1
     end catch
+go
 
 create procedure dbo.add_conference_day
     @conference_id int,
@@ -51,7 +88,7 @@ as
               date,
               attendees_day_max)
          values
-             (conference_id,
+             (@conference_id,
               @date,
               @attendees_day_max)
     end try
@@ -60,6 +97,7 @@ as
                 = 'Cannot add conference day. Message: ' + ERROR_MESSAGE();
         throw 52000, @error_message, 1
     end catch
+go
 
 create procedure dbo.add_workshop
     @conference_day_id int,
@@ -98,6 +136,7 @@ as
                 = 'Cannot add workshop. Message: ' + ERROR_MESSAGE();
         throw 52000, @error_message, 1
     end catch
+go
 
 create procedure dbo.add_conference_discount
     @conference_id int,
@@ -124,6 +163,7 @@ as
                 = 'Cannot add discount. Message: ' + ERROR_MESSAGE();
         throw 52000, @error_message, 1
     end catch
+go
 
 create procedure dbo.add_conference_reservation
     @customer_id int,
@@ -147,6 +187,7 @@ as
                 = 'Cannot add reservation. Message: ' + ERROR_MESSAGE();
         throw 52000, @error_message, 1
     end catch
+go
 
 create procedure dbo.add_conference_day_reservation
     @conference_day_id int,
@@ -181,6 +222,7 @@ as
                 = 'Cannot add conference day reservation. Message: ' + ERROR_MESSAGE();
         throw 52000, @error_message, 1
     end catch
+go
 
 create procedure dbo.add_customer
     @phone_number varchar(16),
@@ -199,6 +241,7 @@ as
                 = 'Cannot add customer. Message: ' + ERROR_MESSAGE();
         throw 52000, @error_message, 1
     end catch
+go
 
 create procedure dbo.add_company_customer
     @company_name varchar(64),
@@ -222,6 +265,7 @@ as
                 = 'Cannot add company customer. Message: ' + ERROR_MESSAGE();
         throw 52000, @error_message, 1
     end catch
+go
 
 create procedure dbo.add_individual_customer
     @first_name varchar(64),
@@ -248,6 +292,7 @@ as
                 = 'Cannot add company customer. Message: ' + ERROR_MESSAGE();
         throw 52000, @error_message, 1
     end catch
+go
 
 create procedure dbo.add_payment
     @payment_date date,
@@ -274,6 +319,7 @@ as
                 = 'Cannot add payment. Message: ' + ERROR_MESSAGE();
         throw 52000, @error_message, 1
     end catch
+go
 
 create procedure dbo.add_registered
     @first_name varchar(64),
@@ -292,6 +338,7 @@ as
                 = 'Cannot add registered. Message: ' + ERROR_MESSAGE();
         throw 52000, @error_message, 1
     end catch
+go
 
 create procedure dbo.get_all_attendees_from_reservation
     @reservation_id int
@@ -305,3 +352,4 @@ as
         inner join registered reg on cda.registered_id = reg.registered_id
         where r.reservation_id = @reservation_id
     end
+go

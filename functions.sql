@@ -1,3 +1,30 @@
+if (object_id('dbo.get_average_registered_number') is not null)
+    drop function dbo.get_average_registered_number;
+
+if (object_id('dbo.get_discount') is not null)
+    drop function dbo.get_discount;
+
+if (object_id('dbo.get_full_reservation_cost') is not null)
+    drop function dbo.get_full_reservation_cost;
+
+if (object_id('dbo.get_paid_reservation_cost') is not null)
+    drop function dbo.get_paid_reservation_cost;
+
+if (object_id('dbo.get_total_full_day_tickets_cost') is not null)
+    drop function dbo.get_total_full_day_tickets_cost;
+
+if (object_id('dbo.get_total_student_day_tickets_cost') is not null)
+    drop function dbo.get_total_student_day_tickets_cost;
+
+if (object_id('dbo.get_total_workshop_cost') is not null)
+    drop function dbo.get_total_workshop_cost;
+
+if (object_id('dbo.reservation_is_paid') is not null)
+    drop function dbo.reservation_is_paid;
+
+
+
+
 create function dbo.get_discount(@date date, @conference_id int)
 returns decimal(3,2)
 as
@@ -6,6 +33,7 @@ begin
     where date_from < @date and conference_id = @conference_id
     order by discount)
 end
+go
 
 create function dbo.get_average_registered_number()
 returns float
@@ -19,6 +47,7 @@ begin
     inner join customers c on r2.customer_id = c.customer_id
     group by c.customer_id)
 end
+go
 
 create function dbo.company_client_data_is_complete (@reservation_id int)
 --zwraca 1 jeśli firma dostarczyła dane do całej rezerwacji
@@ -43,6 +72,7 @@ begin
         return 1
     return 0
 end
+go
 
 create function dbo.reservation_is_paid (@reservation_id int)
 --zwraca 1 jeśli dana rezerwacja jest opłacona
@@ -55,6 +85,7 @@ begin
        return 1
     return 0
 end
+go
 
 create function dbo.get_total_full_day_tickets_cost (@reservation_id int)
 --zwraca całkowitą cenę biletów w danej rezerwacji na konferencję dla uczestników płacących całą kwotę
@@ -77,7 +108,7 @@ begin
             inner join reservations r on cdr.reservation_id = r.reservation_id
             where r.reservation_id = @reservation_id)
 end
-
+go
 
 create function dbo.get_total_student_day_tickets_cost (@reservation_id int)
 --zwraca całkowitą cenę biletów w danej rezerwacji na konferencję dla uczestników będącymi studentami
@@ -95,6 +126,7 @@ begin
             inner join reservations r on cdr.reservation_id = r.reservation_id
             where r.reservation_id = @reservation_id)
 end
+go
 
 create function dbo.get_total_workshop_cost(@reservation_id int)
 returns money
@@ -106,6 +138,7 @@ begin
             inner join conference_day_reservations cdr on wr.reservation_day_id = cdr.reservation_day_id
             where reservation_id = @reservation_id)
 end
+go
 
 create function dbo.get_full_reservation_cost (@reservation_id int)
 returns money
@@ -120,6 +153,7 @@ begin
     set @workshops_cost = dbo.get_total_workshop_cost(@reservation_id);
     return @conference_days_cost+@workshops_cost
 end
+go
 
 create function dbo.get_paid_reservation_cost (@reservation_id int)
 returns money
@@ -129,3 +163,4 @@ begin
             from payments p
             inner join reservations r on r.reservation_id = p.reservation_id)
 end
+go

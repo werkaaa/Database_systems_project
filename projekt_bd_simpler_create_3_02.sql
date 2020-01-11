@@ -135,8 +135,8 @@ CREATE TABLE workshops (
     workshop_description varchar(256)  NOT NULL,
     attendees_workshop_max int  NOT NULL,
     price money  NOT NULL,
-    start_time datetime  NOT NULL,
-    end_time datetime  NOT NULL,
+    start_time time  NOT NULL,
+    end_time time  NOT NULL,
     CONSTRAINT workshops_pk PRIMARY KEY  (workshop_id)
 );
 

@@ -22,7 +22,8 @@ if (object_id('dbo.get_total_workshop_cost') is not null)
 if (object_id('dbo.reservation_is_paid') is not null)
     drop function dbo.reservation_is_paid;
 
-
+if(object_id('dbo.get_registered_id') is not null)
+    drop function dbo.get_registered_id;
 
 
 create function dbo.get_discount(@date date, @conference_id int)

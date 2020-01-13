@@ -34,6 +34,19 @@ if (object_id('dbo.add_registered') is not null)
 if (object_id('dbo.get_all_attendees_from_reservation') is not null)
     drop procedure dbo.get_all_attendees_from_reservation;
 
+if (object_id('dbo.add_attendee') is not null)
+    drop procedure dbo.add_attendee;
+
+if (object_id('dbo.add_address') is not null)
+    drop procedure dbo.add_address;
+
+if (object_id('dbo.add_workshop_attendee') is not null)
+    drop procedure dbo.add_workshop_attendee;
+
+if (object_id('dbo.add_workshop_reservation') is not null)
+    drop procedure dbo.add_workshop_reservation;
+
+
 create procedure dbo.add_conference
     @name varchar(64),
     @description varchar(256),
@@ -228,19 +241,12 @@ create procedure dbo.add_customer
     @phone_number varchar(16),
     @email_address varchar(64)
 as
-    begin try
-        insert into customers
-            (phone_number,
-             email_address)
-        values
-            (@phone_number,
-             @email_address)
-    end try
-    begin catch
-        declare @error_message varchar(2048)
-                = 'Cannot add customer. Message: ' + ERROR_MESSAGE();
-        throw 52000, @error_message, 1
-    end catch
+    insert into customers
+        (phone_number,
+        email_address)
+    values
+        (@phone_number,
+         @email_address)
 go
 
 create procedure dbo.add_company_customer
@@ -327,14 +333,17 @@ create procedure dbo.add_registered
     @email_address varchar(64)
 as
     begin try
-        insert into registered
-            (first_name,
-             last_name,
-             email_address)
-        values
-            (@first_name,
-             @last_name,
-             @email_address)
+        if dbo.get_registered_id(@first_name, @last_name, @email_address) is null
+            insert into registered
+                (first_name,
+                last_name,
+                email_address)
+            values
+                (@first_name,
+                 @last_name,
+                @email_address)
+        else begin throw 52000, 'User with given data exists in database.', 1
+            end
     end try
     begin catch
         declare @error_message varchar(2048)
@@ -355,4 +364,126 @@ as
         inner join registered reg on cda.registered_id = reg.registered_id
         where r.reservation_id = @reservation_id
     end
+go
+
+create procedure dbo.add_attendee
+    @first_name varchar(64),
+    @last_name varchar(64),
+    @email_address varchar(64),
+    @reservation_day_id int,
+    @is_student bit
+as
+    begin try
+        declare @registered_id int;
+        set @registered_id = dbo.get_registered_id(@first_name, @last_name, @email_address);
+        if @registered_id is null
+            begin
+            --exec dbo.add_registered(@first_name, @last_name, @email_address);
+                insert into registered
+                    (first_name,
+                     last_name,
+                     email_address)
+                values
+                    (@first_name,
+                     @last_name,
+                     @email_address)
+            set @registered_id = dbo.get_registered_id(@first_name, @last_name, @email_address);
+            end
+        if not exists
+            (select * from conference_day_reservations
+            where reservation_day_id = @reservation_day_id)
+            begin throw 52000, 'Incorrect reservation_day_id: reservation day with given id does not exist.', 1
+            end
+        insert into conference_day_attendees
+           (registered_id, reservation_day_id, is_student)
+        values
+               (@registered_id, @reservation_day_id, @is_student)
+    end try
+    begin catch
+        declare @error_message varchar(2048)
+                = 'Cannot add attendee. Message: ' + ERROR_MESSAGE();
+        throw 52000, @error_message, 1
+    end catch
+go
+
+create procedure add_address
+    @country varchar(64),
+    @city varchar(64),
+    @postal_code varchar(64),
+    @street varchar(64),
+    @building_number varchar(64)
+as
+    insert into addresses
+        (country,
+         city,
+         postal_code,
+         street,
+         building_number)
+    values
+        (@country,
+         @city,
+         @postal_code,
+         @street,
+         @building_number)
+go
+
+create procedure add_workshop_reservation
+    @reservation_day_id int,
+    @workshop_id int,
+    @attendees_number int
+as
+    begin try
+        if not exists
+            (select * from workshops
+            where workshop_id = @workshop_id)
+        begin throw 52000, 'Incorrect workshop_id: workshop with given id does not exist.', 1
+        end
+        if not exists
+            (select * from conference_day_reservations
+            where reservation_day_id = @reservation_day_id)
+        begin throw 52000, 'Incorrect reservation_day_id: reservation with given id does not exist.', 1
+        end
+        insert into workshop_reservations
+            (reservation_day_id,
+             workshop_id,
+             attendees_number)
+        values
+            (@reservation_day_id,
+             @workshop_id,
+             @attendees_number)
+    end try
+    begin catch
+        declare @error_message varchar(2048)
+                = 'Cannot add workshop reservation. Message: ' + ERROR_MESSAGE();
+        throw 52000, @error_message, 1
+    end catch
+go
+
+create procedure add_workshop_attendee
+    @attendee_id int,
+    @reservation_workshop_id int
+as
+    begin try
+        if not exists
+            (select * from workshop_reservations
+            where reservation_workshop_id = @reservation_workshop_id)
+        begin throw 52000, 'Incorrect reservation_workshop_id: workshop reservation with given id does not exist.', 1
+        end
+        if not exists
+            (select * from conference_day_attendees
+            where attendee_id = @attendee_id)
+        begin throw 52000, 'Incorrect attendee_id: attendee with given id does not exist.', 1
+        end
+        insert into workshop_attendees
+            (reservation_workshop_id,
+             attendee_id)
+        values
+            (@reservation_workshop_id,
+             @attendee_id)
+    end try
+    begin catch
+        declare @error_message varchar(2048)
+                = 'Cannot add workshop attendee. Message: ' + ERROR_MESSAGE();
+        throw 52000, @error_message, 1
+    end catch
 go

@@ -1,10 +1,10 @@
 -- Created by Vertabelo (http://vertabelo.com)
--- Last modification date: 2019-12-29 20:37:01.413
+-- Last modification date: 2020-01-13 17:55:14.524
 
 -- tables
 -- Table: addresses
 CREATE TABLE addresses (
-    address_id int  NOT NULL,
+    address_id int  NOT NULL identity,
     country varchar(64)  NOT NULL,
     city varchar(64)  NOT NULL,
     postal_code varchar(8)  NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE addresses (
 
 -- Table: companies
 CREATE TABLE companies (
-    company_id int  NOT NULL,
+    company_id int  NOT NULL identity,
     company_name varchar(64)  NOT NULL,
     customer_id int  NOT NULL,
     CONSTRAINT companies_pk PRIMARY KEY  (company_id)
@@ -23,24 +23,26 @@ CREATE TABLE companies (
 
 -- Table: conference_day_attendees
 CREATE TABLE conference_day_attendees (
+    attendee_id int  NOT NULL identity,
     registered_id int  NOT NULL,
     reservation_day_id int  NOT NULL,
-    attendee_id int  NOT NULL,
+    is_student bit  NOT NULL,
     CONSTRAINT conference_day_attendees_pk PRIMARY KEY  (attendee_id)
 );
 
 -- Table: conference_day_reservations
 CREATE TABLE conference_day_reservations (
-    reservation_day_id int  NOT NULL,
+    reservation_day_id int  NOT NULL identity,
     conference_day_id int  NOT NULL,
     reservation_id int  NOT NULL,
-    attendees_number int  NOT NULL,
+    student_attendees int  NOT NULL,
+    full_price_attendees int  NOT NULL,
     CONSTRAINT conference_day_reservations_pk PRIMARY KEY  (reservation_day_id)
 );
 
 -- Table: conference_days
 CREATE TABLE conference_days (
-    conference_day_id int  NOT NULL,
+    conference_day_id int  NOT NULL identity,
     conference_id int  NOT NULL,
     date date  NOT NULL,
     attendees_day_max int  NOT NULL,
@@ -49,19 +51,18 @@ CREATE TABLE conference_days (
 
 -- Table: conferences
 CREATE TABLE conferences (
-    conference_id int  NOT NULL,
+    conference_id int  NOT NULL identity,
     name varchar(64)  NOT NULL,
     description varchar(256)  NOT NULL,
     address_id int  NOT NULL,
-    attendees_max int  NOT NULL,
     base_price money  NOT NULL,
-    student_discount int  NOT NULL,
+    student_discount decimal(3,2)  NOT NULL,
     CONSTRAINT conferences_pk PRIMARY KEY  (conference_id)
 );
 
 -- Table: customers
 CREATE TABLE customers (
-    customer_id int  NOT NULL,
+    customer_id int  NOT NULL identity,
     phone_number varchar(16)  NOT NULL,
     email_address varchar(64)  NOT NULL,
     CONSTRAINT customers_pk PRIMARY KEY  (customer_id)
@@ -69,7 +70,7 @@ CREATE TABLE customers (
 
 -- Table: individual_customers
 CREATE TABLE individual_customers (
-    individual_customer_id int  NOT NULL,
+    individual_customer_id int  NOT NULL identity,
     first_name varchar(64)  NOT NULL,
     last_name varchar(64)  NOT NULL,
     customer_id int  NOT NULL,
@@ -78,15 +79,16 @@ CREATE TABLE individual_customers (
 
 -- Table: payments
 CREATE TABLE payments (
-    payment_id int  NOT NULL,
+    payment_id int  NOT NULL identity,
     payment_date date  NOT NULL,
     reservation_id int  NOT NULL,
+    amount money  NOT NULL,
     CONSTRAINT payments_pk PRIMARY KEY  (payment_id)
 );
 
 -- Table: price_levels
 CREATE TABLE price_levels (
-    price_level_id int  NOT NULL,
+    price_level_id int  NOT NULL identity,
     conference_id  int  NOT NULL,
     discount decimal(3,2)  NOT NULL,
     date_from date  NOT NULL,
@@ -95,27 +97,19 @@ CREATE TABLE price_levels (
 
 -- Table: registered
 CREATE TABLE registered (
-    registered_id int  NOT NULL,
+    registered_id int  NOT NULL identity,
     first_name varchar(64)  NOT NULL,
     last_name varchar(64)  NOT NULL,
-    customer_id int  NOT NULL,
+    email_address varchar(64)  NOT NULL,
     CONSTRAINT registered_pk PRIMARY KEY  (registered_id)
 );
 
 -- Table: reservations
 CREATE TABLE reservations (
-    reservation_id int  NOT NULL,
+    reservation_id int  NOT NULL identity,
     customer_id int  NOT NULL,
     reservation_date date  NOT NULL,
     CONSTRAINT reservations_pk PRIMARY KEY  (reservation_id)
-);
-
--- Table: student_cards
-CREATE TABLE student_cards (
-    student_card_number varchar(16)  NOT NULL,
-    registered_id int  NOT NULL,
-    expiration_date date  NOT NULL,
-    CONSTRAINT student_cards_pk PRIMARY KEY  (student_card_number)
 );
 
 -- Table: workshop_attendees
@@ -127,7 +121,7 @@ CREATE TABLE workshop_attendees (
 
 -- Table: workshop_reservations
 CREATE TABLE workshop_reservations (
-    reservation_workshop_id int  NOT NULL,
+    reservation_workshop_id int  NOT NULL identity,
     reservation_day_id int  NOT NULL,
     workshop_id int  NOT NULL,
     attendees_number int  NOT NULL,
@@ -136,7 +130,7 @@ CREATE TABLE workshop_reservations (
 
 -- Table: workshops
 CREATE TABLE workshops (
-    workshop_id int  NOT NULL,
+    workshop_id int  NOT NULL identity,
     conference_day_id int  NOT NULL,
     workshop_title varchar(64)  NOT NULL,
     workshop_description varchar(256)  NOT NULL,
@@ -192,16 +186,6 @@ ALTER TABLE payments ADD CONSTRAINT payments_reservations
 ALTER TABLE price_levels ADD CONSTRAINT price_levels_conferences
     FOREIGN KEY (conference_id )
     REFERENCES conferences (conference_id);
-
--- Reference: registered_customers (table: registered)
-ALTER TABLE registered ADD CONSTRAINT registered_customers
-    FOREIGN KEY (customer_id)
-    REFERENCES customers (customer_id);
-
--- Reference: registered_students (table: student_cards)
-ALTER TABLE student_cards ADD CONSTRAINT registered_students
-    FOREIGN KEY (registered_id)
-    REFERENCES registered (registered_id);
 
 -- Reference: reservation_conference_day_conference_days (table: conference_day_reservations)
 ALTER TABLE conference_day_reservations ADD CONSTRAINT reservation_conference_day_conference_days

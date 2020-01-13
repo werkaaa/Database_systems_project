@@ -164,3 +164,14 @@ begin
             inner join reservations r on r.reservation_id = p.reservation_id)
 end
 go
+
+create function dbo.get_registered_id(@first_name varchar(64), @last_name varchar(64), @email_address varchar(64))
+returns int
+as
+    begin
+        return (select registered_id from registered
+        where last_name = @last_name and
+              first_name = @first_name and
+              email_address = @email_address)
+    end
+go

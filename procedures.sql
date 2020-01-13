@@ -323,15 +323,18 @@ go
 
 create procedure dbo.add_registered
     @first_name varchar(64),
-    @last_name varchar(64)
+    @last_name varchar(64),
+    @email_address varchar(64)
 as
     begin try
         insert into registered
             (first_name,
-             last_name)
+             last_name,
+             email_address)
         values
             (@first_name,
-             @last_name)
+             @last_name,
+             @email_address)
     end try
     begin catch
         declare @error_message varchar(2048)

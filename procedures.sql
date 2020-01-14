@@ -46,6 +46,22 @@ if (object_id('dbo.add_workshop_attendee') is not null)
 if (object_id('dbo.add_workshop_reservation') is not null)
     drop procedure dbo.add_workshop_reservation;
 
+if (object_id('dbo.change_conference_details') is not null)
+    drop procedure dbo.change_conference_details;
+
+if (object_id('dbo.change_workshop_details') is not null)
+    drop procedure dbo.change_workshop_details;
+
+if (object_id('dbo.change_registered_details') is not null)
+    drop procedure dbo.change_registered_details;
+
+if (object_id('dbo.change_conference_day_attendees_number') is not null)
+    drop procedure dbo.change_conference_day_attendees_number;
+
+if (object_id('dbo.change_customer_details') is not null)
+    drop procedure dbo.change_customer_details;
+
+
 
 create procedure dbo.add_conference
     @name varchar(64),
@@ -487,3 +503,132 @@ as
         throw 52000, @error_message, 1
     end catch
 go
+
+create procedure dbo.change_conference_details
+    @conference_id int,
+    @description varchar(256)
+as
+    begin try
+        if not exists
+            (select * from conferences
+            where conference_id = @conference_id)
+        begin throw 52000, 'Incorrect conference_id: conference with given id does not exist.', 1
+        end
+        if @description is not null
+            update conferences
+                set description = @description
+                where conference_id = @conference_id
+    end try
+    begin catch
+        declare @error_message varchar(2048)
+                = 'Cannot update conference details. Message: ' + ERROR_MESSAGE();
+        throw 52000, @error_message, 1
+    end catch
+go
+
+create procedure dbo.change_workshop_details
+    @workshop_id int,
+    @workshop_description varchar(256),
+    @attendees_workshop_max int
+as
+    begin try
+        if not exists
+            (select * from workshops
+            where workshop_id = @workshop_id)
+        begin throw 52000, 'Incorrect workshop_id: workshop with given id does not exist.', 1
+        end
+        if @workshop_description is not null
+            update workshops
+                set workshop_description = @workshop_description
+                where workshop_id = @workshop_id
+        if @attendees_workshop_max is not null
+            update workshops
+                set attendees_workshop_max = @attendees_workshop_max
+                where workshop_id = @workshop_id
+    end try
+    begin catch
+        declare @error_message varchar(2048)
+                = 'Cannot update workshops details. Message: ' + ERROR_MESSAGE();
+        throw 52000, @error_message, 1
+    end catch
+go
+
+create procedure dbo.change_registered_details
+    @registered_id int,
+    @first_name varchar(64),
+    @last_name varchar(64),
+    @email_address varchar(64)
+as
+    begin try
+        if not exists
+            (select * from registered
+            where registered_id = @registered_id)
+        begin throw 52000, 'Incorrect registered_id: registered with given id does not exist.', 1
+        end
+        if @first_name is not null
+            update registered
+                set first_name = @first_name
+                where registered_id = @registered_id
+        if @last_name is not null
+            update registered
+                set last_name = @last_name
+                where registered_id = @registered_id
+        if @email_address is not null
+            update registered
+                set email_address = @email_address
+                where registered_id = @registered_id
+    end try
+    begin catch
+        declare @error_message varchar(2048)
+                = 'Cannot update registered details. Message: ' + ERROR_MESSAGE();
+        throw 52000, @error_message, 1
+    end catch
+go
+
+create procedure dbo.change_conference_day_attendees_number
+    @conference_day_id int,
+    @attendees_day_max int
+as
+    begin try
+        if not exists
+            (select * from conference_days
+             where conference_day_id = @conference_day_id)
+        begin throw 52000, 'Incorrect conference_day_id: conference day with given id does not exist.', 1
+        end
+        if @attendees_day_max is not null
+            update conference_days
+                set attendees_day_max = @attendees_day_max
+                where conference_day_id = @conference_day_id
+    end try
+    begin catch
+        declare @error_message varchar(2048)
+                = 'Cannot update conference day attendees_day_max. Message: ' + ERROR_MESSAGE();
+        throw 52000, @error_message, 1
+    end catch
+go
+
+create procedure dbo.change_customer_details
+    @customer_id int,
+    @phone_number varchar(16),
+    @email_address varchar(64)
+as
+    begin try
+        if not exists
+            (select * from customers
+            where customer_id = @customer_id)
+        begin throw 52000, 'Incorrect customer_id: customer with given id does not exists.', 1
+        end
+        if @phone_number is not null
+            update customers
+                set phone_number = @phone_number
+                where customer_id = @customer_id
+        if @email_address is not null
+            update customers
+                set email_address = @email_address
+                where customer_id = @customer_id
+    end try
+    begin catch
+        declare @error_message varchar(2048)
+                = 'Cannot update customer details. Message: ' + ERROR_MESSAGE();
+        throw 52000, @error_message, 1
+    end catch

@@ -12,12 +12,13 @@ customers_number = 30
 price_level_number = 0 #will increase during generation
 reservation_number = 100
 max_people_per_day_reservation = 10 #x2
+max_workshop_per_day_reservation = 10
 
 conference_days_data = {}
 workshops_data = {}
 conference_day_reservations_data = {}
 reservations_data = {}
-tables = ['payments', 'conference_day_attendees', 'conference_day_reservations', 'reservations', 'price_levels', 'workshops', 'individual_customers', 'companies', 'customers', 'conference_days', 'conferences', 'addresses', 'registered']
+tables = ['workshop_attendees', 'workshop_reservations', 'payments', 'conference_day_attendees', 'conference_day_reservations', 'reservations', 'price_levels', 'workshops', 'individual_customers', 'companies', 'customers', 'conference_days', 'conferences', 'addresses', 'registered']
 
 def ii(table, state):
     return '\nset identity_insert dbo.' + table + ' ' + state + '\n'
@@ -164,7 +165,7 @@ def workshops():
                 end_time = (dt.datetime.combine(dt.date(1, 1, 1), start_time) + dt.timedelta(minutes=duration[random.randint(0, len(duration)-1)])).time()
                 q = q + '(' + str(workshop_number+1) + ', ' + str(cd_id) + ', \'' + title + '\', \'' + description + '\', '+ str(attendees_max) + ', ' \
                     + str(random.randint(1000, 10000)/100) + ', \'' + str(start_time) + '\', \'' + str(end_time) + '\')'
-                workshops_data[workshop_number+1] = [start_time, end_time, attendees_max]
+                workshops_data[workshop_number+1] = [start_time, end_time, attendees_max, cd_id]
                 workshop_number +=1
                 if workshop_number % 900 == 899:
                     q += '\n' + q_begin('workshops', cols)
@@ -233,27 +234,36 @@ def get_random_workshop_from_conference_day(conference_day_id):
     workshops = len(workshops_data)
     start_workshop = random.randint(0, workshops-1)
     for w in range(workshops):
-        if workshops_data[(w+start_workshop)%(workshops-1)][3] == conference_day_id:
-            return workshops_data[(w+start_workshop)%(workshops-1)]
+        if workshops_data[(w+start_workshop) % workshops + 1][3] == conference_day_id:
+            if workshops_data[(w+start_workshop) % workshops + 1][2] > 0:
+                workshops_data[(w+start_workshop) % workshops + 1][2] -= 1
+                return ((w+start_workshop) % (workshops) + 1, workshops_data[(w+start_workshop) % workshops + 1])
 
     return -1
 
 
 def reservations(n):
+    #sprawdzić czy działą po zmianie indeksowania dni konferencji
+    #attendee_id jako foreign_key w conference_day_attendees
     pack_conference_days()
     reservations_cols = '(reservation_id, customer_id, reservation_date)'
     conference_day_reservations_cols = '(reservation_day_id, conference_day_id, reservation_id, student_attendees, full_price_attendees)'
 
     conference_day_attendees_cols = '(attendee_id, registered_id, reservation_day_id, is_student)'
     payments_cols = '(payment_id, payment_date, reservation_id, amount)'
+    workshop_reservations_cols = '(reservation_workshop_id, reservation_day_id, workshop_id, attendees_number)'
+    workshop_attendees_cols = '(reservation_workshop_id, attendee_id)'
 
     reservation_day_id = 0
     attendee_id = 0
     payment_id = 0
+    workshop_reservation_id = 0
+
     q = ''
     for r in range(n):
         conference_id = random.randint(1, len(conferences_data))
         data = conferences_data[conference_id]
+        conference_day_id = data[0]
         duration = data[1]
         before_conf = random.randint(3, 50)
         reservation_date = data[2] + dt.timedelta(days=-before_conf)
@@ -264,13 +274,12 @@ def reservations(n):
         reservations_data[r+1] = [reservation_date, conference_id, 0]
 
         subreservations = random.randint(1, duration)
-
         for d in range(subreservations):
             reservation_day_id += 1
             student_attendees = random.randint(0, max_people_per_day_reservation)
             full_price_attendees = random.randint(1, max_people_per_day_reservation)
             q = q + ii('conference_day_reservations', 'on') + q_begin('conference_day_reservations', conference_day_reservations_cols)
-            q = q + '(' + str(reservation_day_id) + ', ' + str(conference_id) + ', ' + str(r+1) + ', ' + str(student_attendees) + ', ' + str(full_price_attendees) + ')'
+            q = q + '(' + str(reservation_day_id) + ', ' + str(conference_day_id + d) + ', ' + str(r+1) + ', ' + str(student_attendees) + ', ' + str(full_price_attendees) + ')'
             q = q + ii('conference_day_reservations', 'off')
 
             # with 0.5 probability the data is complete
@@ -280,6 +289,7 @@ def reservations(n):
             else:
                 s_att = random.randint(0, student_attendees)
                 f_att = random.randint(0, full_price_attendees)
+
 
             for a in range(s_att+f_att):
                 attendee_id += 1
@@ -291,6 +301,25 @@ def reservations(n):
                 q = q + ii('conference_day_attendees', 'on') + q_begin('conference_day_attendees', conference_day_attendees_cols)
                 q = q + '(' + str(attendee_id) + ', ' + str(registered_id) + ', ' + str(reservation_day_id) + ', ' + str(is_student) + ')'
                 q = q + ii('conference_day_attendees', 'off')
+
+            workshops_reservation_number = random.randint(0, max_workshop_per_day_reservation)
+            for w in range(workshops_reservation_number):
+                workshop_data = get_random_workshop_from_conference_day(conference_day_id)
+                workshop_reservation_id += 1
+                if workshop_data != -1:
+                    q = q + ii('workshop_reservations', 'on') + q_begin('workshop_reservations', workshop_reservations_cols)
+                    q = q + '(' + str(workshop_reservation_id) + ', ' + str(reservation_day_id) + ', ' + str(workshop_data[0]) + ', ' + str(workshop_data[1][2]) + ')'
+                    q = q + ii('workshop_reservations', 'off')
+
+            att = s_att + f_att
+
+            if att > 1 and workshops_reservation_number > 1:
+                q = q + q_begin('workshop_attendees', workshop_attendees_cols)
+                while att > 1 and workshops_reservation_number > 1:
+                    workshops_reservation_number -= 1
+                    att -= 1
+                    q = q + '(' + str(workshop_reservation_id - workshops_reservation_number) + ', ' + str(attendee_id - att) + '), '
+                q = q[:-2]
 
         payment_number = random.randint(0, 10)
         for p in range(payment_number):
@@ -329,10 +358,14 @@ def delete_query():
 
 def generate_data():
     query = delete_query()
-    query = query + registered(registered_number) + '\n' + addresses(addresses_number) + '\n' \
-            + conferences(conferences_number) + '\n' + conference_days() + '\n' + customers(customers_number) + '\n' + workshops() + '\n' + reservations(reservation_number)
+    query = query + registered(registered_number) + '\n' + addresses(addresses_number) + '\n' + conferences(conferences_number) + '\n' + conference_days() + '\n' + customers(customers_number) + '\n' +  workshops()
 
-    with open('generator/insert.sql', 'w') as insert:
+    with open('generator/insert1.sql', 'w') as insert:
+        insert.write(query)
+
+    query = reservations(reservation_number)
+
+    with open('generator/insert2.sql', 'w') as insert:
         insert.write(query)
 
 generate_data()

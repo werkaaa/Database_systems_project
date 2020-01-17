@@ -632,3 +632,5 @@ as
                 = 'Cannot update customer details. Message: ' + ERROR_MESSAGE();
         throw 52000, @error_message, 1
     end catch
+go
+

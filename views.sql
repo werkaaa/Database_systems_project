@@ -70,14 +70,14 @@ create view dbo.upcoming_conferences as
 go
 
 create view dbo.payment_info as
-    select p.payment_id, p.payment_date, r.reservation_id, r.reservation_date,
+    select p.payment_id, p.payment_date, r.reservation_id, r.reservation_date, r.canceled,
            c.phone_number, c.email_address, co.company_name as client_name
     from payments p
     inner join reservations r on p.reservation_id = r.reservation_id
     inner join customers c on r.customer_id = c.customer_id
     inner join companies co on co.customer_id = c.customer_id
     union
-    select p.payment_id, p.payment_date, r.reservation_id, r.reservation_date,
+    select p.payment_id, p.payment_date, r.reservation_id, r.reservation_date, r.canceled,
            c.phone_number, c.email_address, ic.first_name + ' ' + ic.last_name  as client_name
     from payments p
     inner join reservations r on p.reservation_id = r.reservation_id
@@ -106,11 +106,11 @@ create view dbo.workshops_data as
 go
 
 create view dbo.conferences_data as
-    select c.conference_id, c.name, c.description, min(cd.date) as start_date, max(cd.date) as end_date, (a.country+', '+a.city+', '+a.postal_code+', '+a.street+' '+a.building_number) as address, c.base_price, c.student_discount
+    select c.conference_id, c.name, c.description, min(cd.date) as start_date, max(cd.date) as end_date, (a.country+', '+a.city+', '+a.postal_code+', '+a.street+' '+a.building_number) as address, c.base_price, c.student_discount, c.launched
     from conferences as c
     inner join addresses a on c.address_id = a.address_id
     inner join conference_days cd on c.conference_id = cd.conference_id
-    group by c.conference_id, c.name, c.description, (a.country+', '+a.city+', '+a.postal_code+', '+a.street+' '+a.building_number), c.base_price, c.student_discount
+    group by c.conference_id, c.name, c.description, (a.country+', '+a.city+', '+a.postal_code+', '+a.street+' '+a.building_number), c.base_price, c.student_discount, c.launched
 go
 
 create view dbo.customers_with_incomplete_data as

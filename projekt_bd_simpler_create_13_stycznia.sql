@@ -51,7 +51,7 @@ CREATE TABLE conference_days (
 
 -- Table: conferences
 CREATE TABLE conferences (
-    conference_id int  NOT NULL,
+    conference_id int  NOT NULL identity ,
     name varchar(64)  NOT NULL,
     description varchar(256)  NOT NULL,
     address_id int  NOT NULL,
@@ -107,7 +107,7 @@ CREATE TABLE registered (
 
 -- Table: reservations
 CREATE TABLE reservations (
-    reservation_id int  NOT NULL,
+    reservation_id int  NOT NULL identity ,
     customer_id int  NOT NULL,
     reservation_date date  NOT NULL,
     canceled bit  NOT NULL,

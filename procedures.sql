@@ -68,7 +68,8 @@ create procedure dbo.add_conference
     @description varchar(256),
     @address_id int,
     @base_price money,
-    @student_discount decimal(3,2)
+    @student_discount decimal(3,2),
+    @launched bit
 as
     begin try
         if not exists(
@@ -81,13 +82,15 @@ as
             description,
             address_id,
             base_price,
-            student_discount)
+            student_discount,
+            launched)
         values
             (@name,
              @description,
              @address_id,
              @base_price,
-             @student_discount)
+             @student_discount,
+             @launched)
     end try
     begin catch
         declare @error_message varchar(2048)
@@ -196,7 +199,8 @@ go
 
 create procedure dbo.add_conference_reservation
     @customer_id int,
-    @reservation_date date
+    @reservation_date date,
+    @canceled bit
 as
     begin try
         if not exists
@@ -206,10 +210,12 @@ as
         end
         insert into reservations
             (customer_id,
-             reservation_date)
+             reservation_date,
+             canceled)
         values
             (@customer_id,
-             @reservation_date)
+             @reservation_date,
+             @canceled)
     end try
     begin catch
         declare @error_message varchar(2048)

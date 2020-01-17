@@ -13,6 +13,7 @@ as
             inner join conference_days cd2 on cdr.conference_day_id = cd2.conference_day_id
             where inserted.reservation_id = cdr.reservation_id and cd1.conference_id <> cd2.conference_id)
         begin throw 50001, 'Reservation must have common conference_id', 1
+            rollback transaction
         end
     end
 go

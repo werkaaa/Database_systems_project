@@ -51,12 +51,13 @@ CREATE TABLE conference_days (
 
 -- Table: conferences
 CREATE TABLE conferences (
-    conference_id int  NOT NULL identity,
+    conference_id int  NOT NULL,
     name varchar(64)  NOT NULL,
     description varchar(256)  NOT NULL,
     address_id int  NOT NULL,
     base_price money  NOT NULL,
     student_discount decimal(3,2)  NOT NULL,
+    launched bit  NOT NULL,
     CONSTRAINT conferences_pk PRIMARY KEY  (conference_id)
 );
 
@@ -106,9 +107,10 @@ CREATE TABLE registered (
 
 -- Table: reservations
 CREATE TABLE reservations (
-    reservation_id int  NOT NULL identity,
+    reservation_id int  NOT NULL,
     customer_id int  NOT NULL,
     reservation_date date  NOT NULL,
+    canceled bit  NOT NULL,
     CONSTRAINT reservations_pk PRIMARY KEY  (reservation_id)
 );
 

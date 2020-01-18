@@ -175,16 +175,16 @@ begin
 end
 go
 
-create function dbo.get_full_reservation_cost (@reservation_id int)
+create function dbo.get_full_reservation_cost(@reservation_id int)
 returns money
 as
 begin
-    declare @conference_days_cost int;
+    declare @conference_days_cost money;
     set @conference_days_cost = dbo.get_total_full_day_tickets_cost(@reservation_id)
                                  +
                                  dbo.get_total_student_day_tickets_cost(@reservation_id)
 
-    declare @workshops_cost int;
+    declare @workshops_cost money;
     set @workshops_cost = dbo.get_total_workshop_cost(@reservation_id);
     return @conference_days_cost+@workshops_cost
 end
@@ -215,12 +215,16 @@ create function dbo.number_of_conference_day_free_places(@conference_day_id int)
 returns int
 as
     begin
-        return isnull(((select attendees_day_max from conference_days
-            where conference_day_id = @conference_day_id) -
-               (select sum(full_price_attendees) from conference_day_reservations
-                   where conference_day_id = @conference_day_id) -
-               (select sum(student_attendees) from conference_day_reservations
-                   where conference_day_id = @conference_day_id)), 0)
+        return isnull(((select attendees_day_max from conference_days cd
+            inner join conference_day_reservations cdr on cd.conference_day_id = cdr.conference_day_id
+            inner join reservations r2 on cdr.reservation_id = r2.reservation_id
+            where cd.conference_day_id = @conference_day_id and r2.canceled = 0) -
+               (select sum(full_price_attendees) from conference_day_reservations cdr
+                   inner join reservations r3 on cdr.reservation_id = r3.reservation_id
+                   where cdr.conference_day_id = @conference_day_id and r3.canceled = 0) -
+               (select sum(student_attendees) from conference_day_reservations cdr
+                   inner join reservations r4 on cdr.reservation_id = r4.reservation_id
+                   where cdr.conference_day_id = @conference_day_id and r4.canceled = 0)), 0)
     end
 go
 
@@ -232,7 +236,11 @@ as
             where workshop_id = @workshop_id) -
                (select sum(attendees_number) from workshop_reservations as wr
                    inner join workshops w on wr.workshop_id = w.workshop_id
-                   where w.workshop_id = @workshop_id)), 0)
+                   inner join workshop_attendees wa on wr.reservation_workshop_id = wa.reservation_workshop_id
+                   inner join conference_day_attendees cda on wa.attendee_id = cda.attendee_id
+                   inner join conference_day_reservations cdr on wr.reservation_day_id = cdr.reservation_day_id
+                   inner join reservations r on r.reservation_id = cdr.reservation_id
+                   where w.workshop_id = @workshop_id and r.canceled = 0)), 0)
     end
 go
 
@@ -241,8 +249,9 @@ returns int
 as
     begin
         return isnull((select sum(full_price_attendees)+sum(student_attendees)
-            from conference_day_reservations
-            where reservation_id = @reservation_id), 0)
+            from conference_day_reservations cdr
+            inner join reservations res on res.reservation_id = cdr.reservation_id
+            where res.reservation_id = @reservation_id and res.canceled = 0), 0)
     end
 go
 

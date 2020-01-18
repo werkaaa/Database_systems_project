@@ -34,6 +34,14 @@ if(object_id('dbo.number_of_workshop_free_places') is not null)
 if(object_id('dbo.total_number_of_people_in_reservation') is not null)
     drop function dbo.total_number_of_people_in_reservation;
 
+if(object_id('dbo.reservation_data_is_complete') is not null)
+    drop function dbo.reservation_data_is_complete;
+
+if(object_id('dbo.conference_day_reservation_data_is_complete') is not null)
+    drop function dbo.conference_day_reservation_data_is_complete;
+
+if(object_id('two_reservations_for_workshops_at_the_same_time') is not null)
+    drop function dbo.two_reservations_for_workshops_at_the_same_time;
 
 create function dbo.get_discount(@date date, @conference_id int)
 returns decimal(3,2)
@@ -59,28 +67,45 @@ begin
 end
 go
 
-create function dbo.company_client_data_is_complete (@reservation_id int)
+create function dbo.conference_day_reservation_data_is_complete (@reservation_day_id int)
+--zwraca 1 jeśli dane uczestników z rezerwacji na dzień są kompletne
+returns bit
+    as
+    begin
+        if (select count(*)
+            from conference_day_attendees cda
+            inner join conference_day_reservations cdr on cda.reservation_day_id = cdr.reservation_day_id
+            where cdr.reservation_day_id = @reservation_day_id and cda.is_student = 1)
+              =
+            (select student_attendees
+             from conference_day_reservations
+             where reservation_day_id = @reservation_day_id)
+            and
+            (select count(*)
+            from conference_day_attendees cda
+            inner join conference_day_reservations cdr on cda.reservation_day_id = cdr.reservation_day_id
+            where cdr.reservation_day_id = @reservation_day_id and cda.is_student = 0)
+              =
+            (select full_price_attendees
+             from conference_day_reservations
+             where reservation_day_id = @reservation_day_id)
+             return 1
+        return 0
+    end
+
+
+
+create function dbo.reservation_data_is_complete (@reservation_id int)
 --zwraca 1 jeśli firma dostarczyła dane do całej rezerwacji
 returns bit
 as
 begin
-    if (select count(*)
-        from dbo.registered_with_their_customers
-        where reservation_id = @reservation_id and is_student = 1)
-           =
-        (select student_attendees
-        from reservations
-        where reservation_id = @reservation_id)
-        and
-       (select count(*)
-        from dbo.registered_with_their_customers
-        where reservation_id = @reservation_id and is_student = 0)
-           =
-        (select full_price_attendees
-        from reservations
-        where reservation_id = @reservation_id)
-        return 1
-    return 0
+    if 0 in
+        (select dbo.conference_day_reservation_data_is_complete(cdr.reservation_day_id)
+         from conference_day_reservations as cdr
+         where cdr.reservation_id = @reservation_id)
+        return 0
+    return 1
 end
 go
 
@@ -219,4 +244,36 @@ as
             from conference_day_reservations
             where reservation_id = @reservation_id), 0)
     end
+go
+
+create function dbo.two_reservations_for_workshops_at_the_same_time (@reservation_workshop_id_1 int, @reservation_workshop_id_2 int)
+--zwraca 1 jeśli podane rezerwacje są na warszty o nachodzących na siebie godzinach
+returns bit
+as
+begin
+    declare @start_time_1 time
+    declare @start_time_2 time
+    declare @end_time_1 time
+    declare @end_time_2 time
+    set @start_time_1 = (select w.start_time from workshops as w
+                         inner join workshop_reservations wr on w.workshop_id = wr.workshop_id
+                         where wr.reservation_workshop_id = @reservation_workshop_id_1)
+
+    set @start_time_2 = (select w.start_time from workshops as w
+                         inner join workshop_reservations wr on w.workshop_id = wr.workshop_id
+                         where wr.reservation_workshop_id = @reservation_workshop_id_2)
+
+    set @end_time_1 = (select w.end_time from workshops as w
+                         inner join workshop_reservations wr on w.workshop_id = wr.workshop_id
+                         where wr.reservation_workshop_id = @reservation_workshop_id_1)
+
+    set @end_time_2 = (select w.end_time from workshops as w
+                         inner join workshop_reservations wr on w.workshop_id = wr.workshop_id
+                         where wr.reservation_workshop_id = @reservation_workshop_id_2)
+
+    if (@start_time_1 < @start_time_2 and @end_time_1 < @start_time_2) or (@start_time_2 < @start_time_1 and @end_time_2 < @start_time_1)
+        return 0
+
+    return 1
+end
 go

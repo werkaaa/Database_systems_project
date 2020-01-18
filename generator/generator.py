@@ -3,11 +3,11 @@ import json
 import numpy as np
 import datetime as dt
 
-registered_number = 50
-attendees_number = 100
+registered_number = 5000
+attendees_number = 14000
 day_reservations_number = 500
 addresses_number = 20
-conferences_number = 100
+conferences_number = 70
 customers_number = 30
 price_level_number = 0 #will increase during generation
 reservation_number = 100
@@ -21,7 +21,10 @@ reservations_data = {}
 tables = ['workshop_attendees', 'workshop_reservations', 'payments', 'conference_day_attendees', 'conference_day_reservations', 'reservations', 'price_levels', 'workshops', 'individual_customers', 'companies', 'customers', 'conference_days', 'conferences', 'addresses', 'registered']
 
 def ii(table, state):
-    return '\nset identity_insert dbo.' + table + ' ' + state + '\n'
+    q = '\nset identity_insert dbo.' + table + ' ' + state + '\n'
+    if state == 'off':
+        q += 'go\n'
+    return q
 
 def q_begin(table, cols):
     return 'insert into dbo.' + table + ' ' + cols + ' values '
@@ -39,7 +42,7 @@ def get_phone_number():
 
 def get_email(name):
     domain = ['@gmail.com', '@yahoo.com', '@agh.edu.pl']
-    return name.lower().replace(" ", "")+domain[random.randint(0, len(domain)-1)]
+    return name.lower().replace(" ", "").replace("'", "")+domain[random.randint(0, len(domain)-1)]
 
 
 def customers(n):
@@ -68,7 +71,7 @@ def customers(n):
 
                     else:
                         name = names[random.randint(0, len(names)-1)]
-                        surname = surnames[random.randint(0, len(surnames)-1)]
+                        surname = surnames[random.randint(0, len(surnames)-1)].replace("'", "")
                         q = q + ii('customers', 'on') + q_begin('customers', customers_cols) + '(' + str(i+1) + ', \'' + get_phone_number() + '\', \'' + get_email(name+surname) + '\')\n' + ii('customers', 'off')
                         q = q + ii('individual_customers', 'on') + q_begin('individual_customers', individual_cols) + '(' + str(individual_number+1) + ', \'' + name + '\', \'' + surname + '\', ' + str(i+1) + ')' + ii('individual_customers', 'off')
                         individual_number += 1
@@ -128,7 +131,7 @@ def conference_days():
     for i in range(conferences_number):
 
         date = get_date()
-        conference_length = random.randint(1, 5)
+        conference_length = random.randint(1, 4)
         #conference = conferences_list[random.randint(0, len(conferences_list)-1)]
         #conferences_list.remove(conference)
 
@@ -157,7 +160,7 @@ def workshops():
         words = json.load(random_words)['commonWords']
         duration = [45, 60, 90, 120]
         for (cd_id, cd_data) in conference_days_data.items():
-            workshops_per_day = random.randint(0, 10)
+            workshops_per_day = random.randint(3, 5)
             for w in range(workshops_per_day):
                 title = words[random.randint(0, len(words)-1)].capitalize() + ' Workshop'
                 attendees_max = random.randint(10, cd_data[1])
@@ -204,10 +207,10 @@ def registered(n):
             surnames = json.load(surnames_file)
             for i in range(n):
                 name = names[random.randint(0, len(names)-1)]
-                surname = surnames[random.randint(0, len(surnames)-1)]
+                surname = surnames[random.randint(0, len(surnames)-1)].replace("'", "")
                 q = q + '(' + str(i+1) + ', \'' + name + '\', \''+ surname + '\', \'' + get_email(name+surname) + '\')'
                 if i % 900 == 899:
-                    q += '\n' + q_begin
+                    q += '\n' + q_begin('registered', cols)
                 elif i < n-1:
                     q += ', '
     q = q + ii('registered', 'off')
@@ -236,7 +239,6 @@ def get_random_workshop_from_conference_day(conference_day_id):
     for w in range(workshops):
         if workshops_data[(w+start_workshop) % workshops + 1][3] == conference_day_id:
             if workshops_data[(w+start_workshop) % workshops + 1][2] > 0:
-                workshops_data[(w+start_workshop) % workshops + 1][2] -= 1
                 return ((w+start_workshop) % (workshops) + 1, workshops_data[(w+start_workshop) % workshops + 1])
 
     return -1
@@ -303,22 +305,28 @@ def reservations(n):
                 q = q + ii('conference_day_attendees', 'off')
 
             workshops_reservation_number = random.randint(0, max_workshop_per_day_reservation)
+            completed_reservations = 0
             for w in range(workshops_reservation_number):
                 workshop_data = get_random_workshop_from_conference_day(conference_day_id)
                 if workshop_data != -1:
+                    spots = min(workshop_data[1][2]//2, (student_attendees+full_price_attendees)//2)
+                if workshop_data != -1 and spots > 0:
                     workshop_reservation_id += 1
+                    completed_reservations += 1
                     q = q + ii('workshop_reservations', 'on') + q_begin('workshop_reservations', workshop_reservations_cols)
-                    q = q + '(' + str(workshop_reservation_id) + ', ' + str(reservation_day_id) + ', ' + str(workshop_data[0]) + ', ' + str(workshop_data[1][2]) + ')'
+                    q = q + '(' + str(workshop_reservation_id) + ', ' + str(reservation_day_id) + ', ' + str(workshop_data[0]) + ', ' + str(spots) + ')'
                     q = q + ii('workshop_reservations', 'off')
+                    workshops_data[workshop_data[0]][2] = 0
 
             att = s_att + f_att
 
-            if att > 1 and workshops_reservation_number > 1:
+            if att > 1 and completed_reservations > 1:
                 q = q + q_begin('workshop_attendees', workshop_attendees_cols)
-                while att > 1 and workshops_reservation_number > 1:
-                    workshops_reservation_number -= 1
+                while att > 1 and completed_reservations > 1:
+                    completed_reservations -= 1
                     att -= 1
-                    q = q + '(' + str(workshop_reservation_id - workshops_reservation_number) + ', ' + str(attendee_id - att) + '), '
+                    q = q + '(' + str(workshop_reservation_id - completed_reservations) + ', ' + str(attendee_id - att) + '), '
+
                 q = q[:-2]
 
         payment_number = random.randint(0, 10)

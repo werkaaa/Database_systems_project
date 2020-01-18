@@ -33,7 +33,6 @@ if (object_id('dbo.registered_with_their_customers') is not null)
     drop view dbo.registered_with_their_customers;
 
 
-
 create view dbo.company_customers_all as
     select cu.customer_id, co.company_name,
            cu.phone_number, cu.email_address
@@ -106,11 +105,11 @@ create view dbo.workshops_data as
 go
 
 create view dbo.conferences_data as
-    select c.conference_id, c.name, c.description, min(cd.date) as start_date, max(cd.date) as end_date, (a.country+', '+a.city+', '+a.postal_code+', '+a.street+' '+a.building_number) as address, c.base_price, c.student_discount, c.launched
+    select c.conference_id, c.name, c.description, min(cd.date) as start_date, max(cd.date) as end_date, (a.country+', '+a.city+', '+a.postal_code+', '+a.street+' '+str(a.building_number)) as address, c.base_price, c.student_discount, c.launched
     from conferences as c
     inner join addresses a on c.address_id = a.address_id
     inner join conference_days cd on c.conference_id = cd.conference_id
-    group by c.conference_id, c.name, c.description, (a.country+', '+a.city+', '+a.postal_code+', '+a.street+' '+a.building_number), c.base_price, c.student_discount, c.launched
+    group by c.conference_id, c.name, c.description, (a.country+', '+a.city+', '+a.postal_code+', '+a.street+' '+str(a.building_number)), c.base_price, c.student_discount, c.launched
 go
 
 create view dbo.customers_with_incomplete_data as
@@ -120,7 +119,7 @@ create view dbo.customers_with_incomplete_data as
     inner join reservations as r on cu.customer_id = r.customer_id
     inner join conference_day_reservations as cdr on r.reservation_id = cdr.reservation_id
     inner join conference_days cd on cdr.conference_day_id = cd.conference_day_id
-    where dbo.company_client_data_is_complete(r.reservation_id)=0
+    where dbo.reservation_data_is_complete(r.reservation_id)=0
     group by r.reservation_id, cu.customer_id, co.company_name, cu.email_address, cu.phone_number
 go
 

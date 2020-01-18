@@ -33,3 +33,7 @@ check (email_address = '%@%' and phone_number = '+[0-9]%')
 alter table workshops
 add constraint proper_workshop_duration
 check (start_time < end_time)
+
+alter table registered
+add constraint unique_mail
+unique (email_address)

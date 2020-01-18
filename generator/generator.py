@@ -22,9 +22,10 @@ tables = ['workshop_attendees', 'workshop_reservations', 'payments', 'conference
 
 def ii(table, state):
     q = '\nset identity_insert dbo.' + table + ' ' + state + '\n'
-    if state == 'off':
-        q += 'go\n'
     return q
+
+def go():
+    return '\ngo\n'
 
 def q_begin(table, cols):
     return 'insert into dbo.' + table + ' ' + cols + ' values '
@@ -77,6 +78,7 @@ def customers(n):
                         individual_number += 1
                     q = q + '\n'
 
+    q += go()
     return q
 
 def conferences(n):
@@ -94,7 +96,7 @@ def conferences(n):
                 q += '\n' + q_begin('conferences', cols)
             elif i < n-1:
                 q += ', '
-    q = q + ii('conferences', 'off')
+    q = q + ii('conferences', 'off') + go()
     return q
 
 def get_date():
@@ -117,7 +119,7 @@ def add_price_levels(date, conf_id):
         discount += delta
         q = q + '(' + str(price_level_id) + ',' + str(conf_id) + ',' + str(discount) + ', \'' + str(start_date) + '\'), '
 
-    q = q[:-2] + ii('price_levels', 'off') + '\n'
+    q = q[:-2] + ii('price_levels', 'off') + go()
     price_level_number = price_level_id
     return q
 
@@ -146,7 +148,7 @@ def conference_days():
             if not d == conference_length - 1:
                 q = q + ', '
 
-        q = q + ii('conference_days', 'off')
+        q = q + ii('conference_days', 'off') + go()
 
 
     return q
@@ -174,7 +176,7 @@ def workshops():
                     q += '\n' + q_begin('workshops', cols)
                 else:
                     q += ', '
-    q = q[:-2] + ii('workshops', 'off')
+    q = q[:-2] + ii('workshops', 'off') + go()
     return q
 
 def addresses(n):
@@ -195,7 +197,7 @@ def addresses(n):
                 q += '\n' + q_begin('addresses', cols)
             elif i < n-1:
                 q += ', '
-    q = q + ii('addresses', 'off')
+    q = q + ii('addresses', 'off') + go()
     return q
 
 def registered(n):
@@ -213,7 +215,7 @@ def registered(n):
                     q += '\n' + q_begin('registered', cols)
                 elif i < n-1:
                     q += ', '
-    q = q + ii('registered', 'off')
+    q = q + ii('registered', 'off') + go()
     return q
 
 conferences_data = {}
@@ -338,6 +340,8 @@ def reservations(n):
             q = q + '(' + str(payment_id) + ', \'' + str(payment_date) + '\', ' + str(r+1) + ', ' + str(amount) + ')'
             q = q + ii('payments', 'off')
 
+        q = q + go()
+
     return q
 
 
@@ -352,7 +356,7 @@ def conference_day_attendees(n):
             q += '\n' + q_begin('conference_day_attendees', cols)
         elif i < n-1:
             q += ', '
-    q = q + ii('conference_day_attendees', 'off')
+    q = q + ii('conference_day_attendees', 'off') + go()
     return q
 
 def delete_query():

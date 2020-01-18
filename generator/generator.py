@@ -78,14 +78,14 @@ def customers(n):
 
 def conferences(n):
     #https://github.com/saintedlama/streets-austria
-    cols = '(conference_id, name, description, address_id, base_price, student_discount)'
+    cols = '(conference_id, name, description, address_id, base_price, student_discount, launched)'
     q = ii('conferences', 'on') + q_begin('conferences', cols)
     with open('generator/files/random_words.json', 'r') as random_words:
         description = "Really nice conference, everyone should attend."
         words = json.load(random_words)['commonWords']
         for i in range(n):
             name = words[random.randint(0, len(words)-1)].capitalize() + ' ' + words[random.randint(0, len(words)-1)].capitalize() + ' Conference'
-            q = q + '(' + str(i+1) + ', \'' + name + '\', \'' + description + '\', \''+ str(random.randint(1, addresses_number)) + '\', \''+ str(random.randint(10000, 100000)/100) + '\', \''+ str(random.randint(1, 99)/100) + '\')'
+            q = q + '(' + str(i+1) + ', \'' + name + '\', \'' + description + '\', \''+ str(random.randint(1, addresses_number)) + '\', \''+ str(random.randint(10000, 100000)/100) + '\', \'' + str(random.randint(1, 99)/100) + '\', '+ str(1) +')'
 
             if i % 900 == 899:
                 q += '\n' + q_begin('conferences', cols)
@@ -161,7 +161,7 @@ def workshops():
             for w in range(workshops_per_day):
                 title = words[random.randint(0, len(words)-1)].capitalize() + ' Workshop'
                 attendees_max = random.randint(10, cd_data[1])
-                start_time = dt.time(random.randint(0, 23), random.randint(0, 59))
+                start_time = dt.time(random.randint(0, 20), random.randint(0, 59))
                 end_time = (dt.datetime.combine(dt.date(1, 1, 1), start_time) + dt.timedelta(minutes=duration[random.randint(0, len(duration)-1)])).time()
                 q = q + '(' + str(workshop_number+1) + ', ' + str(cd_id) + ', \'' + title + '\', \'' + description + '\', '+ str(attendees_max) + ', ' \
                     + str(random.randint(1000, 10000)/100) + ', \'' + str(start_time) + '\', \'' + str(end_time) + '\')'
@@ -246,7 +246,7 @@ def reservations(n):
     #sprawdzić czy działą po zmianie indeksowania dni konferencji
     #attendee_id jako foreign_key w conference_day_attendees
     pack_conference_days()
-    reservations_cols = '(reservation_id, customer_id, reservation_date)'
+    reservations_cols = '(reservation_id, customer_id, reservation_date, canceled)'
     conference_day_reservations_cols = '(reservation_day_id, conference_day_id, reservation_id, student_attendees, full_price_attendees)'
 
     conference_day_attendees_cols = '(attendee_id, registered_id, reservation_day_id, is_student)'
@@ -269,7 +269,7 @@ def reservations(n):
         reservation_date = data[2] + dt.timedelta(days=-before_conf)
         customer_id = random.randint(1, customers_number)
         q = q + ii('reservations', 'on') + q_begin('reservations', reservations_cols)
-        q = q + '(' + str(r+1) + ', ' + str(customer_id) + ', \'' + str(reservation_date) + '\')'
+        q = q + '(' + str(r+1) + ', ' + str(customer_id) + ', \'' + str(reservation_date) + '\', ' + str(0) + ')'
         q = q + ii('reservations', 'off')
         reservations_data[r+1] = [reservation_date, conference_id, 0]
 
@@ -305,8 +305,8 @@ def reservations(n):
             workshops_reservation_number = random.randint(0, max_workshop_per_day_reservation)
             for w in range(workshops_reservation_number):
                 workshop_data = get_random_workshop_from_conference_day(conference_day_id)
-                workshop_reservation_id += 1
                 if workshop_data != -1:
+                    workshop_reservation_id += 1
                     q = q + ii('workshop_reservations', 'on') + q_begin('workshop_reservations', workshop_reservations_cols)
                     q = q + '(' + str(workshop_reservation_id) + ', ' + str(reservation_day_id) + ', ' + str(workshop_data[0]) + ', ' + str(workshop_data[1][2]) + ')'
                     q = q + ii('workshop_reservations', 'off')

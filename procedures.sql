@@ -67,6 +67,9 @@ if (object_id('dbo.launch_conference') is not null)
 if (object_id('dbo.cancel_reservation') is not null)
     drop procedure dbo.cancel_reservation;
 
+if (object_id('dbo.cancel_old_unpaid_reservations') is not null)
+    drop procedure dbo.cancel_old_unpaid_reservations;
+
 create procedure dbo.add_conference
     @name varchar(64),
     @description varchar(256),
@@ -669,3 +672,23 @@ as
             where conference_id = @conference_id
     end
 go
+
+create procedure dbo.cancel_old_unpaid_reservations
+as
+    set nocount on
+    begin
+        begin transaction
+            begin try
+                update reservations set canceled = 1
+                where reservation_id in (select reservation_id from unpaid_reservations_to_delete_today)
+            end try
+            begin catch
+                if @@trancount > 0
+                    rollback transaction
+                declare @error_message varchar(2048)
+                = 'Cannot update customer details. Message: ' + ERROR_MESSAGE();
+        throw 52000, @error_message, 1
+            end catch
+            if @@trancount > 0
+                commit transaction
+    end

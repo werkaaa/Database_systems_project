@@ -92,7 +92,7 @@ returns bit
              return 1
         return 0
     end
-
+go
 
 
 create function dbo.reservation_data_is_complete (@reservation_id int)

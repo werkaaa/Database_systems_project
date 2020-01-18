@@ -1,3 +1,11 @@
+alter table customers drop constraint proper_email_address_and_phone_number
+alter table price_levels drop constraint check_discount_range
+alter table conferences drop constraint check_student_discount_range
+alter table conferences drop constraint check_if_conference_price_not_negative
+alter table workshops drop constraint check_if_workshop_price_not_negative
+alter table conference_days drop constraint no_conference_days_duplicates
+alter table workshops drop constraint proper_workshop_duration
+
 alter table price_levels
 add constraint check_discount_range
 check (discount > 0.0 and discount < 1.0)
@@ -21,7 +29,6 @@ unique (conference_id, date)
 alter table customers
 add constraint proper_email_address_and_phone_number
 check (email_address = '%@%' and phone_number = '+[0-9]%')
-alter table customers drop constraint proper_email_address_and_phone_number
 
 alter table workshops
 add constraint proper_workshop_duration

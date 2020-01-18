@@ -119,8 +119,6 @@ as
     end
 go
 
-
-
 create trigger dbo.price_levels_discount_decreases
     on price_levels
     after insert, update
@@ -170,6 +168,7 @@ as
             rollback transaction
         end
     end
+go
 
 create trigger dbo.price_level_dates_before_conference_date
     --calls a view inside
@@ -185,4 +184,3 @@ as
             rollback transaction
         end
     end
-

@@ -32,6 +32,11 @@ if (object_id('dbo.workshops_data') is not null)
 if (object_id('dbo.registered_with_their_customers') is not null)
     drop view dbo.registered_with_their_customers;
 
+if (object_id('dbo.customers_with_incomplete_data') is not null)
+    drop view dbo.customers_with_incomplete_data;
+
+if (object_id('dbo.customers_with_incomplete_data_to_contact_today') is not null)
+    drop view dbo.customers_with_incomplete_data_to_contact_today;
 
 create view dbo.company_customers_all as
     select cu.customer_id, co.company_name,

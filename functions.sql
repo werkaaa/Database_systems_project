@@ -224,7 +224,8 @@ as
                    where cdr.conference_day_id = @conference_day_id and r3.canceled = 0) -
                (select sum(student_attendees) from conference_day_reservations cdr
                    inner join reservations r4 on cdr.reservation_id = r4.reservation_id
-                   where cdr.conference_day_id = @conference_day_id and r4.canceled = 0)), 0)
+                   where cdr.conference_day_id = @conference_day_id and r4.canceled = 0)),
+                   (select attendees_day_max from conference_days where conference_day_id = @conference_day_id))
     end
 go
 
@@ -240,7 +241,8 @@ as
                    inner join conference_day_attendees cda on wa.attendee_id = cda.attendee_id
                    inner join conference_day_reservations cdr on wr.reservation_day_id = cdr.reservation_day_id
                    inner join reservations r on r.reservation_id = cdr.reservation_id
-                   where w.workshop_id = @workshop_id and r.canceled = 0)), 0)
+                   where w.workshop_id = @workshop_id and r.canceled = 0)),
+                   (select attendees_workshop_max from workshops where workshop_id = @workshop_id))
     end
 go
 

@@ -133,21 +133,21 @@ create view dbo.customers_with_incomplete_data_to_contact_today as
     from dbo.customers_with_incomplete_data
     where data_due_date <= getdate()
 go
-
+drop view dbo.unpaid_reservations
 create view dbo.unpaid_reservations as
     select distinct r.reservation_id, cu.customer_id, co.company_name as customer_name, cu.email_address, cu.phone_number, dateadd(day, 7, r.reservation_date) as due_date,
                     dbo.get_full_reservation_cost(r.reservation_id) as cost, dbo.get_paid_reservation_cost(r.reservation_id) as paid
     from companies as co
     inner join customers cu on co.customer_id = cu.customer_id
     inner join reservations r on cu.customer_id = r.customer_id
-    where dbo.reservation_is_paid(r.reservation_id)=0
+    where dbo.reservation_is_paid(r.reservation_id)=0 and r.canceled = 0
      union
      select distinct r.reservation_id, cu.customer_id, (icu.first_name+' '+icu.last_name) as customer_name, cu.email_address, cu.phone_number, dateadd(day, 7, r.reservation_date) as due_date,
                      dbo.get_full_reservation_cost(r.reservation_id) as cost, dbo.get_paid_reservation_cost(r.reservation_id) as paid
      from individual_customers as icu
      inner join customers cu on icu.customer_id = cu.customer_id
      inner join reservations r on cu.customer_id = r.customer_id
-     where dbo.reservation_is_paid(r.reservation_id)=0
+     where dbo.reservation_is_paid(r.reservation_id)=0 and r.canceled = 0
 go
 
 

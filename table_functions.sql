@@ -71,10 +71,11 @@ as
     return (select distinct r.registered_id, r.first_name, r.last_name, r.email_address, cda.is_student
             from workshops w
             inner join workshop_reservations wr on w.workshop_id = wr.workshop_id
+            inner join workshop_attendees wa on wa.reservation_workshop_id = wr.reservation_workshop_id
+            inner join conference_day_attendees cda on cda.attendee_id = wa.attendee_id
             inner join conference_day_reservations cdr on wr.reservation_day_id = cdr.reservation_day_id
-            inner join conference_day_attendees cda on cdr.reservation_day_id = cda.reservation_day_id
-            inner join registered r on r.registered_id = cda.registered_id
             inner join reservations r2 on cdr.reservation_id = r2.reservation_id
+            inner join registered r on cda.registered_id = r.registered_id
             where r2.canceled = 0 and w.workshop_id = @workshop_id)
 go
 
@@ -159,9 +160,10 @@ as
     return (select distinct w.workshop_id, w.workshop_title, w.workshop_description
            from workshops w
            inner join workshop_reservations wr on w.workshop_id = wr.workshop_id
+           inner join workshop_attendees wa on wr.reservation_workshop_id = wa.reservation_workshop_id
+           inner join conference_day_attendees cda on wa.attendee_id = cda.attendee_id
            inner join conference_day_reservations cdr on wr.reservation_day_id = cdr.reservation_day_id
            inner join reservations res on res.reservation_id = cdr.reservation_id
-           inner join conference_day_attendees cda on cdr.reservation_day_id = cda.reservation_day_id
            inner join registered r on cda.registered_id = r.registered_id
            where r.registered_id = @registered_id and res.canceled = 0)
 go

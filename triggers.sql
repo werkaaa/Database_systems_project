@@ -7,9 +7,6 @@ if (object_id('dbo.not_enough_conference_day_places_after_update') is not null)
 if (object_id('dbo.not_enough_workshop_places_after_update') is not null)
     drop trigger dbo.not_enough_workshop_places_after_update;
 
-if (object_id('dbo.check_inserted_conference_day_uniqueness') is not null)
-    drop trigger dbo.check_inserted_conference_day_uniqueness;
-
 if (object_id('dbo.enough_place_to_add_conference_day_reservation') is not null)
     drop trigger dbo.enough_place_to_add_conference_day_reservation;
 
@@ -65,22 +62,6 @@ as
     end
 go
 
-create trigger dbo.check_inserted_conference_day_uniqueness
-    on conference_days
-    after insert
-as
-    begin
-        if exists
-            (select * from inserted as cd
-            cross join inserted cd2
-            where cd.conference_id = cd2.conference_id
-              and cd.date = cd2.date)
-        begin throw 50001, 'Conference day with given data has already been added to database.', 1
-            rollback transaction
-        end
-    end
-go
-
 create trigger dbo.enough_place_to_add_conference_day_reservation
     on conference_day_reservations
     after insert
@@ -125,3 +106,4 @@ as
         end
     end
 go
+

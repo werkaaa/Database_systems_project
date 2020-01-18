@@ -25,6 +25,15 @@ if (object_id('dbo.reservation_is_paid') is not null)
 if(object_id('dbo.get_registered_id') is not null)
     drop function dbo.get_registered_id;
 
+if(object_id('dbo.number_of_conference_day_free_places') is not null)
+    drop function dbo.number_of_conference_day_free_places;
+
+if(object_id('dbo.number_of_workshop_free_places') is not null)
+    drop function dbo.number_of_workshop_free_places;
+
+if(object_id('dbo.total_number_of_people_in_reservation') is not null)
+    drop function dbo.total_number_of_people_in_reservation;
+
 
 create function dbo.get_discount(@date date, @conference_id int)
 returns decimal(3,2)
@@ -174,5 +183,45 @@ as
         where last_name = @last_name and
               first_name = @first_name and
               email_address = @email_address)
+    end
+go
+
+create function dbo.number_of_conference_day_free_places(@conference_day_id int)
+returns int
+as
+    begin
+        return isnull(((select attendees_day_max from conference_days
+            where conference_day_id = @conference_day_id) -
+               (select sum(full_price_attendees) from conference_day_reservations
+                   where conference_day_id = @conference_day_id) -
+               (select sum(student_attendees) from conference_day_reservations
+                   where conference_day_id = @conference_day_id)), 0)
+    end
+go
+
+create function dbo.number_of_workshop_free_places(@workshop_id int)
+returns int
+as
+    begin
+        return isnull(((select attendees_workshop_max from workshops
+            where workshop_id = @workshop_id) -
+               (select sum(full_price_attendees) from conference_day_reservations
+                   inner join workshop_reservations wr on conference_day_reservations.reservation_day_id = wr.reservation_day_id
+                   inner join workshops w on wr.workshop_id = w.workshop_id
+                   where w.workshop_id = @workshop_id) -
+               (select sum(student_attendees) from conference_day_reservations
+                   inner join workshop_reservations wr on conference_day_reservations.reservation_day_id = wr.reservation_day_id
+                   inner join workshops w on wr.workshop_id = w.workshop_id
+                   where w.workshop_id = @workshop_id)), 0)
+    end
+go
+
+create function dbo.total_number_of_people_in_reservation(@reservation_id int)
+returns int
+as
+    begin
+        return isnull((select sum(full_price_attendees)+sum(student_attendees)
+            from conference_day_reservations
+            where reservation_id = @reservation_id), 0)
     end
 go

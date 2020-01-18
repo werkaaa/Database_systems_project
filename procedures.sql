@@ -61,7 +61,11 @@ if (object_id('dbo.change_conference_day_attendees_number') is not null)
 if (object_id('dbo.change_customer_details') is not null)
     drop procedure dbo.change_customer_details;
 
+if (object_id('dbo.launch_conference') is not null)
+    drop procedure dbo.launch_conference;
 
+if (object_id('dbo.cancel_reservation') is not null)
+    drop procedure dbo.cancel_reservation;
 
 create procedure dbo.add_conference
     @name varchar(64),
@@ -145,6 +149,12 @@ as
             (select * from conference_days
              where conference_day_id = @conference_day_id)
         begin throw 52000, 'Incorrect conference_day_id: conference day with given id does not exist.', 1
+        end
+        if exists
+            (select * from conference_days
+            where conference_day_id = @conference_day_id
+            and attendees_day_max < @attendees_workshop_max)
+        begin throw 52000, 'Workshop attendees number should be lower than maximal number of attendees that day.', 1
         end
         insert into workshops
             (conference_day_id,
@@ -640,3 +650,22 @@ as
     end catch
 go
 
+create procedure dbo.cancel_reservation
+    @reservation_id int
+as
+    begin
+        update reservations
+            set canceled = 1
+            where reservation_id = @reservation_id
+    end
+go
+
+create procedure dbo.launch_conference
+    @conference_id int
+as
+    begin
+        update conferences
+            set launched = 1
+            where conference_id = @conference_id
+    end
+go

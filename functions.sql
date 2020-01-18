@@ -205,12 +205,7 @@ as
     begin
         return isnull(((select attendees_workshop_max from workshops
             where workshop_id = @workshop_id) -
-               (select sum(full_price_attendees) from conference_day_reservations
-                   inner join workshop_reservations wr on conference_day_reservations.reservation_day_id = wr.reservation_day_id
-                   inner join workshops w on wr.workshop_id = w.workshop_id
-                   where w.workshop_id = @workshop_id) -
-               (select sum(student_attendees) from conference_day_reservations
-                   inner join workshop_reservations wr on conference_day_reservations.reservation_day_id = wr.reservation_day_id
+               (select sum(attendees_number) from workshop_reservations as wr
                    inner join workshops w on wr.workshop_id = w.workshop_id
                    where w.workshop_id = @workshop_id)), 0)
     end

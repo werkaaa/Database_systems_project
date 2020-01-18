@@ -136,7 +136,7 @@ begin
             from conference_day_reservations
             where reservation_id = @reservation_id)
             *
-            (select base_price*(1-dbo.get_discount(r.reservation_date, c.conference_id))
+            (select distinct base_price*(1-dbo.get_discount(r.reservation_date, c.conference_id))
             from conferences c
             inner join conference_days cd on c.conference_id = cd.conference_id
             inner join conference_day_reservations cdr on cd.conference_day_id = cdr.conference_day_id
@@ -144,6 +144,7 @@ begin
             where r.reservation_id = @reservation_id)
 end
 go
+
 
 create function dbo.get_total_student_day_tickets_cost (@reservation_id int)
 --zwraca całkowitą cenę biletów w danej rezerwacji na konferencję dla uczestników będącymi studentami
@@ -154,7 +155,7 @@ begin
             from conference_day_reservations
             where reservation_id = @reservation_id)
             *
-            (select base_price*(1-student_discount)*(1-dbo.get_discount(r.reservation_date, c.conference_id))
+            (select distinct base_price*(1-student_discount)*(1-dbo.get_discount(r.reservation_date, c.conference_id))
             from conferences c
             inner join conference_days cd on c.conference_id = cd.conference_id
             inner join conference_day_reservations cdr on cd.conference_day_id = cdr.conference_day_id
@@ -162,6 +163,15 @@ begin
             where r.reservation_id = @reservation_id)
 end
 go
+
+
+select distinct r.reservation_id, base_price*(1-student_discount)*(1-dbo.get_discount(r.reservation_date, c.conference_id))
+            from conferences c
+            inner join conference_days cd on c.conference_id = cd.conference_id
+            inner join conference_day_reservations cdr on cd.conference_day_id = cdr.conference_day_id
+            inner join reservations r on cdr.reservation_id = r.reservation_id
+
+
 
 create function dbo.get_total_workshop_cost(@reservation_id int)
 returns money

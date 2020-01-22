@@ -49,6 +49,9 @@ if(object_id('dbo.all_conference_day_full_price_attendees_added') is not null)
 if(object_id('dbo.all_conference_day_student_attendees_added') is not null)
     drop function dbo.all_conference_day_student_attendees_added;
 
+if(object_id('dbo.all_workshop_attendees_added') is not null)
+    drop function dbo.all_workshop_attendees_added;
+
 create function dbo.get_discount(@date date, @conference_id int)
 returns decimal(3,2)
 as
@@ -113,6 +116,25 @@ returns bit
             (select student_attendees
              from conference_day_reservations
              where reservation_day_id = @reservation_day_id)
+            return 1
+        return 0
+    end
+
+go
+
+create function dbo.all_workshop_attendees_added (@reservation_workshop_id int)
+--zwraca 1 jeśli dodano już wszystkich uczestników warsztatu możliwych w danej rezerwacji
+returns bit
+    as
+    begin
+        if (select count(*)
+            from workshop_attendees wa
+            inner join workshop_reservations wr on wr.reservation_workshop_id = wa.reservation_workshop_id
+            where wr.reservation_day_id = @reservation_workshop_id)
+              =
+            (select attendees_number
+             from workshop_reservations
+             where reservation_workshop_id = @reservation_workshop_id)
             return 1
         return 0
     end

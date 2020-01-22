@@ -31,9 +31,6 @@ if (object_id('dbo.add_payment') is not null)
 if (object_id('dbo.add_registered') is not null)
     drop procedure dbo.add_registered;
 
-if (object_id('dbo.get_all_attendees_from_reservation') is not null)
-    drop procedure dbo.get_all_attendees_from_reservation;
-
 if (object_id('dbo.add_attendee') is not null)
     drop procedure dbo.add_attendee;
 
@@ -385,20 +382,6 @@ as
                 = 'Cannot add registered. Message: ' + ERROR_MESSAGE();
         throw 52000, @error_message, 1
     end catch
-go
-
-create procedure dbo.get_all_attendees_from_reservation
-    @reservation_id int
-as
-    begin
-        select reg.first_name, reg.last_name, cd.date, cda.is_student
-        from reservations r
-        inner join conference_day_reservations cdr on r.reservation_id = cdr.reservation_id
-        inner join conference_day_attendees cda on cdr.reservation_day_id = cda.reservation_day_id
-        inner join conference_days cd on cdr.conference_day_id = cd.conference_day_id
-        inner join registered reg on cda.registered_id = reg.registered_id
-        where r.reservation_id = @reservation_id
-    end
 go
 
 create procedure dbo.add_attendee

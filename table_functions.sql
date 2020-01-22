@@ -40,6 +40,9 @@ if (object_id('dbo.workshops_of_registered') is not null)
 if (object_id('dbo.conference_days_of_reservation') is not null)
     drop function dbo.conference_days_of_reservation;
 
+if (object_id('dbo.get_all_attendees_from_reservation') is not null)
+    drop function dbo.get_all_attendees_from_reservation;
+
 
 create function dbo.conference_attendees_details(@conference_id int)
 returns table
@@ -177,4 +180,15 @@ as
            inner join conference_days cd on cdr.conference_day_id = cd.conference_day_id
            inner join conferences c on cd.conference_id = c.conference_id
            where r.reservation_id = @reservation_id and r.canceled = 0)
+go
+
+create function dbo.get_all_attendees_from_reservation(@reservation_id int)
+returns table
+as
+    return (select r.first_name, r.last_name, r.email_address, cda.is_student
+           from registered r
+           inner join conference_day_attendees cda on r.registered_id = cda.registered_id
+           inner join conference_day_reservations cdr on cda.reservation_day_id = cdr.reservation_day_id
+           inner join reservations res on cdr.reservation_id = res.reservation_id
+           where res.reservation_id = @reservation_id)
 go

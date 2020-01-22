@@ -412,6 +412,12 @@ as
             where reservation_day_id = @reservation_day_id)
             begin throw 52000, 'Incorrect reservation_day_id: reservation day with given id does not exist.', 1
             end
+        if dbo.all_conference_day_student_attendees_added(@reservation_day_id) = 1
+            and @is_student = 1
+            begin throw 52000, 'There is not enough place to add another attendee.', 1 end
+        if dbo.all_conference_day_full_price_attendees_added (@reservation_day_id) = 1
+            and @is_student = 0
+            begin throw 52000, 'There is not enough place to add another attendee.', 1 end
         insert into conference_day_attendees
            (registered_id, reservation_day_id, is_student)
         values

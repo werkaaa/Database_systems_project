@@ -206,7 +206,7 @@ as
 begin
     return (select sum(amount)
             from payments p
-            inner join reservations r on r.reservation_id = p.reservation_id)
+            where p.reservation_id = @reservation_id)
 end
 go
 

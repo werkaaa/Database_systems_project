@@ -115,7 +115,7 @@ returns bit
 as
 begin
     if dbo.get_full_reservation_cost(@reservation_id)
-       =
+       <=
        dbo.get_paid_reservation_cost (@reservation_id)
        return 1
     return 0
@@ -132,7 +132,7 @@ begin
 --                           from price_levels pl
 --                           inner join dbo.reservations_with_their_price_time_frames tf on pl.date_from = tf.date_from
 --                           where tf.reservation_id = @reservation_id);
-    return (select sum(full_price_attendees)
+    return isnull(((select sum(full_price_attendees)
             from conference_day_reservations
             where reservation_id = @reservation_id)
             *
@@ -141,7 +141,7 @@ begin
             inner join conference_days cd on c.conference_id = cd.conference_id
             inner join conference_day_reservations cdr on cd.conference_day_id = cdr.conference_day_id
             inner join reservations r on cdr.reservation_id = r.reservation_id
-            where r.reservation_id = @reservation_id)
+            where r.reservation_id = @reservation_id)),0)
 end
 go
 
@@ -151,7 +151,7 @@ create function dbo.get_total_student_day_tickets_cost (@reservation_id int)
 returns money
 as
 begin
-    return (select sum(student_attendees)
+    return isnull(((select sum(student_attendees)
             from conference_day_reservations
             where reservation_id = @reservation_id)
             *
@@ -160,28 +160,21 @@ begin
             inner join conference_days cd on c.conference_id = cd.conference_id
             inner join conference_day_reservations cdr on cd.conference_day_id = cdr.conference_day_id
             inner join reservations r on cdr.reservation_id = r.reservation_id
-            where r.reservation_id = @reservation_id)
+            where r.reservation_id = @reservation_id)), 0)
 end
 go
 
-
-select distinct r.reservation_id, base_price*(1-student_discount)*(1-dbo.get_discount(r.reservation_date, c.conference_id))
-            from conferences c
-            inner join conference_days cd on c.conference_id = cd.conference_id
-            inner join conference_day_reservations cdr on cd.conference_day_id = cdr.conference_day_id
-            inner join reservations r on cdr.reservation_id = r.reservation_id
-
-
+--select dbo.get_total_student_day_tickets_cost(reservation_id) from reservations
 
 create function dbo.get_total_workshop_cost(@reservation_id int)
 returns money
 as
 begin
-    return (select sum(wr.attendees_number*w.price)
+    return isnull((select sum(wr.attendees_number*w.price)
             from workshops w
             inner join workshop_reservations wr on w.workshop_id = wr.workshop_id
             inner join conference_day_reservations cdr on wr.reservation_day_id = cdr.reservation_day_id
-            where reservation_id = @reservation_id)
+            where cdr.reservation_id = @reservation_id), 0)
 end
 go
 
@@ -204,9 +197,9 @@ create function dbo.get_paid_reservation_cost (@reservation_id int)
 returns money
 as
 begin
-    return (select sum(amount)
+    return (select isnull(sum(amount), 0)
             from payments p
-            inner join reservations r on r.reservation_id = p.reservation_id)
+            where p.reservation_id = @reservation_id)
 end
 go
 

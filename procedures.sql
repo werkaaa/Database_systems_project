@@ -639,21 +639,41 @@ go
 create procedure dbo.cancel_reservation
     @reservation_id int
 as
-    begin
+    begin try
+        if not exists
+            (select * from reservations
+            where reservation_id = @reservation_id)
+        begin throw 52000, 'Incorrect reservation_id: Reservation with given id does not exist.', 1
+        end
         update reservations
             set canceled = 1
             where reservation_id = @reservation_id
-    end
+    end try
+    begin catch
+        declare @error_message varchar(2048)
+                = 'Cannot cancel reservation. Message: ' + ERROR_MESSAGE();
+        throw 52000, @error_message, 1
+    end catch
 go
 
 create procedure dbo.launch_conference
     @conference_id int
 as
-    begin
+    begin try
+        if not exists
+            (select * from conferences
+            where conference_id = @conference_id)
+        begin throw 52000, 'Incorrect conference_id: Conference with given id does not exist.', 1
+        end
         update conferences
             set launched = 1
             where conference_id = @conference_id
-    end
+    end try
+    begin catch
+        declare @error_message varchar(2048)
+                = 'Cannot launch conference. Message: ' + ERROR_MESSAGE();
+        throw 52000, @error_message, 1
+    end catch
 go
 
 create procedure dbo.cancel_old_unpaid_reservations
@@ -675,3 +695,4 @@ as
             if @@trancount > 0
                 commit transaction
     end
+go

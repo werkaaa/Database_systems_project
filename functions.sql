@@ -130,7 +130,7 @@ returns bit
         if (select count(*)
             from workshop_attendees wa
             inner join workshop_reservations wr on wr.reservation_workshop_id = wa.reservation_workshop_id
-            where wr.reservation_day_id = @reservation_workshop_id)
+            where wr.reservation_workshop_id = @reservation_workshop_id)
               =
             (select attendees_number
              from workshop_reservations

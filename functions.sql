@@ -43,6 +43,12 @@ if(object_id('dbo.conference_day_reservation_data_is_complete') is not null)
 if(object_id('two_reservations_for_workshops_at_the_same_time') is not null)
     drop function dbo.two_reservations_for_workshops_at_the_same_time;
 
+if(object_id('dbo.all_conference_day_full_price_attendees_added') is not null)
+    drop function dbo.all_conference_day_full_price_attendees_added;
+
+if(object_id('dbo.all_conference_day_student_attendees_added') is not null)
+    drop function dbo.all_conference_day_student_attendees_added;
+
 create function dbo.get_discount(@date date, @conference_id int)
 returns decimal(3,2)
 as
@@ -94,6 +100,43 @@ returns bit
     end
 go
 
+create function dbo.all_conference_day_student_attendees_added (@reservation_day_id int)
+--zwraca 1 jeśli dodano już wszystkich studentów
+returns bit
+    as
+    begin
+        if (select count(*)
+            from conference_day_attendees cda
+            inner join conference_day_reservations cdr on cda.reservation_day_id = cdr.reservation_day_id
+            where cdr.reservation_day_id = @reservation_day_id and cda.is_student = 1)
+              =
+            (select student_attendees
+             from conference_day_reservations
+             where reservation_day_id = @reservation_day_id)
+            return 1
+        return 0
+    end
+
+go
+
+create function dbo.all_conference_day_full_price_attendees_added (@reservation_day_id int)
+--zwraca 1 jeśli dodano już wszystkich pełno płatnych uczestników
+returns bit
+    as
+    begin
+        if (select count(*)
+            from conference_day_attendees cda
+            inner join conference_day_reservations cdr on cda.reservation_day_id = cdr.reservation_day_id
+            where cdr.reservation_day_id = @reservation_day_id and cda.is_student = 0)
+              =
+            (select full_price_attendees
+             from conference_day_reservations
+             where reservation_day_id = @reservation_day_id)
+            return 1
+        return 0
+    end
+
+go
 
 create function dbo.reservation_data_is_complete (@reservation_id int)
 --zwraca 1 jeśli firma dostarczyła dane do całej rezerwacji
